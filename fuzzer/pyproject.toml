@@ -1,0 +1,23 @@
+[build-system]
+requires= ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[project]
+name = "cuberite_fuzzer"
+version = "0.1.0"
+description = "A fuzzer for Cuberite (and the Minecraft protocol in general) written with boofuzz"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "boofuzz>=0.4.2",
+]
+
+[project.scripts]
+fuzzer = "cuberite_fuzzer.fuzzer:run"
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.5.1",
+    "pytest>=9.0.2",
+    "ruff>=0.15.4",
+]

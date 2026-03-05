@@ -8,7 +8,7 @@ Make sure to also pull the `cuberite` submodule (either pass `--recurse-submodul
 Run `make build-cuberite` at the root directory to build Cuberite.
 
 ### [boofuzz](https://boofuzz.readthedocs.io/en/stable/) Harnesses
-Currently, all our fuzzing harnesses are stored at "fuzzing/boofuzz".
+Currently, all our fuzzing harnesses are stored in "fuzzer".
 Run `uv sync` to install all dependencies.
 
 **TODO: Put any relevant fuzzer instructions here!**

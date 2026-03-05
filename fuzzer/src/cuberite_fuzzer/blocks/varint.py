@@ -1,5 +1,5 @@
 import boofuzz
-from varint import write_varint, write_varlong
+from ..varint import write_varint, write_varlong
 from typing import override
 
 
