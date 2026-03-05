@@ -44,3 +44,11 @@ def test_read_varlong(number: int, varlong: bytes):
 @pytest.mark.parametrize("number,varlong", VARLONG_EXAMPLES)
 def test_write_varlong(number: int, varlong: bytes):
     assert write_varlong(number) == varlong
+
+def test_read_varint_toolarge():
+    with pytest.raises(RuntimeError):
+        read_varint(b"\xff\xff\xff\xff\xff\xff")
+
+def test_read_varlong_toolarge():
+    with pytest.raises(RuntimeError):
+        read_varlong(b"\x80\x80\x80\x80\x80\x80\x80\x80\x80\x80\x01")

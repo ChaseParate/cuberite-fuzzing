@@ -17,7 +17,7 @@ def read_varnum(varnum: bytes, max_len: int) -> int:
             break
         position += 7
         if position >= max_len:
-            raise RuntimeError(f"VarInt is too big: maximum length {max_len} bits")
+            raise RuntimeError(f"VarInt is too big to read: maximum length {max_len} bits")
         i += 1
     
     return value
