@@ -8,10 +8,12 @@ Make sure to also pull the `cuberite` submodule (either pass `--recurse-submodul
 Run `make build-cuberite` at the root directory to build Cuberite.
 
 ### [boofuzz](https://boofuzz.readthedocs.io/en/stable/) Harnesses
-Currently, all our fuzzing harnesses are stored at "fuzzing/boofuzz".
-Run `uv sync` to install all dependencies.
+Currently, all our fuzzing harnesses are stored in the `fuzzing` directory.
 
-**TODO: Put any relevant fuzzer instructions here!**
+Run `make fuzz` to run the fuzzer.
+**TODO: Put any other relevant fuzzer instructions here!**
 
 We use `ruff` for formatting and linting.
-You can run `uvx pre-commit install` to install the formatting and linting pre-commit hooks. Alternatively, you can run `uvx ruff check --fix && uvx ruff format` to do said formatting and linting manually.
+You can run `uvx pre-commit install` to install the formatting and linting pre-commit hooks. Alternatively, you can run `make format` to do said formatting and linting manually.
+
+Run `make test` to run our unit tests.

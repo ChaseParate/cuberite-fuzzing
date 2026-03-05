@@ -1,6 +1,8 @@
-import boofuzz
-from varint import write_varint, write_varlong
 from typing import override
+
+import boofuzz
+
+from fuzzing.models.varint import write_varint, write_varlong
 
 
 class VarInt(boofuzz.BitField):

@@ -1,8 +1,7 @@
 [project]
-name = "boofuzz-harnesses"
+name = "cuberite-fuzzing"
 version = "0.1.0"
 description = "Add your description here"
-readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "boofuzz>=0.4.2",
@@ -14,3 +13,6 @@ dev = [
     "pytest>=9.0.2",
     "ruff>=0.15.4",
 ]
+
+[tool.ruff.lint]
+select = ["I"]
