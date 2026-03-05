@@ -2,6 +2,8 @@ from typing import override
 
 import boofuzz
 
+from .varint_blocks import VarInt
+
 
 class PrefixedOptional(boofuzz.Fuzzable):
     """Prefixed Optional primitive.
@@ -56,3 +58,58 @@ class PrefixedOptional(boofuzz.Fuzzable):
         if value is None:
             return b"\x00"
         return b"\x01" + self.child.encode(value, mutation_context)
+
+
+class RefOrVal(VarInt):
+    """'ID or X' type, either a reference ID or, if 0, 0 followed by an object
+    :param name: Name, for referencing later
+    :param child: Child block, either fuzzable or int (defaults to int 1)
+    :param fuzzable: Whether to fuzz IDs, only works if child is an ID
+    """
+
+    child: boofuzz.Fuzzable | int
+
+    @override
+    def __init__(
+        self,
+        name: str | None = None,
+        child: boofuzz.Fuzzable | int = 1,
+        fuzzable: bool = False,
+        *args,
+        **kwargs,
+    ):
+        self.child = child
+        default_value = 0
+        if isinstance(child, int):
+            default_value = child
+        super().__init__(name, default_value, fuzzable, *args, **kwargs)
+
+    @override
+    def mutations(self, default_value):
+        if isinstance(self.child, int):
+            for mutation in super().mutations(self.child):
+                yield mutation
+        else:
+            for mutation in self.child.mutations(self.child.original_value()):
+                yield mutation
+
+    @override
+    def num_mutations(self, default_value):
+        if isinstance(self.child, int):
+            return super().num_mutations(self.child)
+        else:
+            return self.child.num_mutations(self.child.original_value())
+
+    @override
+    def get_value(self, mutation_context):
+        if isinstance(self.child, int):
+            return super().get_value(mutation_context)
+        else:
+            return self.child.get_value(mutation_context)
+
+    @override
+    def encode(self, value, mutation_context):
+        if isinstance(self.child, int):
+            return super().encode(value, mutation_context)
+        else:
+            return b"\x00" + self.child.encode(value, mutation_context)
