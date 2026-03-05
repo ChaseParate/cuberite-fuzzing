@@ -60,7 +60,7 @@ class PrefixedOptional(boofuzz.Fuzzable):
         return b"\x01" + self.child.encode(value, mutation_context)
 
 
-class RefOrVal(VarInt):
+class IDOrX(VarInt):
     """'ID or X' type, either a reference ID or, if 0, 0 followed by an object
     :param name: Name, for referencing later
     :param child: Child block, either fuzzable or int (defaults to int 1)

@@ -2,7 +2,7 @@ import logging
 
 import boofuzz
 
-from fuzzing.models.prefixed_blocks import PrefixedOptional, RefOrVal
+from fuzzing.models.prefixed_blocks import IDOrX, PrefixedOptional
 from fuzzing.models.varint_blocks import VarInt
 
 
@@ -36,27 +36,27 @@ def test_optional_mutations():
         )
 
 
-def test_ref_or_val_ref():
-    block = RefOrVal("foo", child=5)
+def test_id_or_x_id():
+    block = IDOrX("foo", child=5)
     result = block.encode(block.get_value(None), None)
     assert result == b"\x05"
 
 
-def test_ref_or_val_val():
-    block = RefOrVal("foo", child=boofuzz.DWord("foo", default_value=42, endian=">"))
+def test_id_or_x_x():
+    block = IDOrX("foo", child=boofuzz.DWord("foo", default_value=42, endian=">"))
     result = block.encode(block.get_value(None), None)
     assert result == b"\x00\x00\x00\x00\x2a"
 
 
-def test_ref_or_val_ref_mutations():
+def test_id_or_x_id_mutations():
     num = VarInt("foo", 42)
-    block = RefOrVal("bar", child=42)
+    block = IDOrX("bar", child=42)
     assert block.num_mutations(None) == num.num_mutations(42)
 
 
-def test_ref_or_val_val_mutations():
+def test_id_or_x_x_mutations():
     dword = boofuzz.DWord("foo", default_value=42, endian=">")
-    block = RefOrVal("bar", child=boofuzz.DWord("foo", default_value=42, endian=">"))
+    block = IDOrX("bar", child=boofuzz.DWord("foo", default_value=42, endian=">"))
     for word_mutation, block_mutation in zip(
         dword.mutations(42), block.mutations(None)
     ):
