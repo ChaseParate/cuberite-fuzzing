@@ -38,3 +38,37 @@ def test_varlong_sized(example: str):
     block = VarLongSized("foo", children=(boofuzz.String("bar", default_value=example)))
     result = block.encode(block.get_value(None), None)
     assert result == varint.write_varlong(len(example)) + example.encode("utf-8")
+
+
+def test_varint_sized_array():
+    arr = VarIntSized(
+        "foo",
+        children=(boofuzz.String("bar", "bar", 3), boofuzz.String("baz", "baz", 3)),
+        item_size=3,
+    )
+    result = arr.encode(arr.get_value(None), None)
+    assert result == b"\x02barbaz"
+
+
+def test_varint_sized_array_huge():
+    huge_arr = [boofuzz.Word(f"word{i}", 4, endian=">") for i in range(1024)]
+    arr = VarIntSized("foo", children=tuple(huge_arr), item_size=2)
+    result = arr.encode(arr.get_value(None), None)
+    assert result == varint.write_varint(1024) + b"\x00\x04" * 1024
+
+
+def test_varlong_sized_array():
+    arr = VarLongSized(
+        "foo",
+        children=(boofuzz.String("bar", "bar", 3), boofuzz.String("baz", "baz", 3)),
+        item_size=3,
+    )
+    result = arr.encode(arr.get_value(None), None)
+    assert result == b"\x02barbaz"
+
+
+def test_varlong_sized_array_huge():
+    huge_arr = [boofuzz.Word(f"word{i}", 4, endian=">") for i in range(1024)]
+    arr = VarLongSized("foo", children=tuple(huge_arr), item_size=2)
+    result = arr.encode(arr.get_value(None), None)
+    assert result == varint.write_varlong(1024) + b"\x00\x04" * 1024

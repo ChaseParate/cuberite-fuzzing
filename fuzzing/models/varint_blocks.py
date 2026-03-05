@@ -90,7 +90,10 @@ class VarIntSized(boofuzz.FuzzableBlock):
     :param name: Name, for referencing later
     :param request: Request this block belongs to
     :param children: Children of this block
+    :param item_size: Size of each item in bytes, defaults to 1
     """
+
+    item_size: int
 
     @override
     def __init__(
@@ -98,6 +101,7 @@ class VarIntSized(boofuzz.FuzzableBlock):
         name: str | None = None,
         request: boofuzz.Request | None = None,
         children: tuple[boofuzz.Fuzzable, ...] | None = None,
+        item_size: int = 1,
         *args,
         **kwargs,
     ):
@@ -109,11 +113,12 @@ class VarIntSized(boofuzz.FuzzableBlock):
             *args,
             **kwargs,
         )
+        self.item_size = item_size
 
     @override
     def encode(self, _value, mutation_context) -> bytes:
         data: bytes = self.get_child_data(mutation_context=mutation_context)
-        size: bytes = write_varint(len(data))
+        size: bytes = write_varint(len(data) // self.item_size)
         return size + data
 
 
@@ -122,7 +127,10 @@ class VarLongSized(boofuzz.FuzzableBlock):
     :param name: Name, for referencing later
     :param request: Request this block belongs to
     :param children: Children of this block
+    :param item_size: Size of each item in bytes, defaults to 1
     """
+
+    item_size: int
 
     @override
     def __init__(
@@ -130,6 +138,7 @@ class VarLongSized(boofuzz.FuzzableBlock):
         name: str | None = None,
         request: boofuzz.Request | None = None,
         children: tuple[boofuzz.Fuzzable, ...] | None = None,
+        item_size: int = 1,
         *args,
         **kwargs,
     ):
@@ -141,9 +150,10 @@ class VarLongSized(boofuzz.FuzzableBlock):
             *args,
             **kwargs,
         )
+        self.item_size = item_size
 
     @override
     def encode(self, _value, mutation_context) -> bytes:
         data: bytes = self.get_child_data(mutation_context=mutation_context)
-        size: bytes = write_varlong(len(data))
+        size: bytes = write_varlong(len(data) // self.item_size)
         return size + data
