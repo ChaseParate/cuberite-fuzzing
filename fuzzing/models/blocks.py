@@ -67,7 +67,7 @@ class VarLong(boofuzz.BitField):
         *args,
         **kwargs,
     ):
-        super(VarLong, self).__init__(
+        super().__init__(
             name=name,
             default_value=default_value,
             max_num=max_num,
@@ -101,7 +101,7 @@ class VarIntSized(boofuzz.FuzzableBlock):
         *args,
         **kwargs,
     ):
-        super(VarIntSized, self).__init__(
+        super().__init__(
             name=name,
             request=request,
             children=children,
