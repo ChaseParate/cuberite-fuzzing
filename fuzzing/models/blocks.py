@@ -1,5 +1,6 @@
-import boofuzz
 from typing import override
+
+import boofuzz
 
 from fuzzing.models.varint import write_varint, write_varlong
 

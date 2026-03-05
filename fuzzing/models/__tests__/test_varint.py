@@ -1,5 +1,6 @@
 import pytest
-from fuzzing.models.varint import read_varint, write_varint, read_varlong, write_varlong
+
+from fuzzing.models.varint import read_varint, read_varlong, write_varint, write_varlong
 
 VARINT_EXAMPLES = [
     (0, b"\x00"),
