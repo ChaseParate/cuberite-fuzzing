@@ -95,6 +95,7 @@ class VarIntSized(boofuzz.FuzzableBlock):
             name=name,
             request=request,
             children=children,
+            fuzzable=False,
             *args, **kwargs
         )
     
@@ -123,6 +124,7 @@ class VarLongSized(boofuzz.FuzzableBlock):
             name=name,
             request=request,
             children=children,
+            fuzzable=False,
             *args, **kwargs
         )
     
