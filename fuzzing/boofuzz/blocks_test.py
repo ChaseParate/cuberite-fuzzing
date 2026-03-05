@@ -1,5 +1,5 @@
-import pytest, logging, varint, boofuzz
-from blocks import *
+import varint
+from blocks import VarInt, VarLong
 
 def test_varint_mutations():
     block = VarInt("foo", 0)

@@ -1,5 +1,5 @@
 import pytest
-from varint import *
+from varint import read_varint, write_varint, read_varlong, write_varlong
 
 VARINT_EXAMPLES = [
     (0,           b"\x00"),
