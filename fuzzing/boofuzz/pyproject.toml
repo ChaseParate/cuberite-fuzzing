@@ -7,3 +7,8 @@ requires-python = ">=3.13"
 dependencies = [
     "boofuzz>=0.4.2",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
