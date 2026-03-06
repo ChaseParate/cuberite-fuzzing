@@ -2,7 +2,7 @@ from typing import override
 
 import boofuzz
 
-from .varint_blocks import VarInt
+from fuzzing.models.varint_blocks import VarInt
 
 
 class PrefixedOptional(boofuzz.Fuzzable):
@@ -37,8 +37,7 @@ class PrefixedOptional(boofuzz.Fuzzable):
         if self.child is None:
             yield None
             return
-        for mutation in self.child.mutations(self.child.original_value()):
-            yield mutation
+        yield from self.child.mutations(self.child.original_value())
 
     @override
     def get_value(self, mutation_context):
@@ -87,11 +86,9 @@ class IDOrX(VarInt):
     @override
     def mutations(self, default_value):
         if isinstance(self.child, int):
-            for mutation in super().mutations(self.child):
-                yield mutation
+            yield from super().mutations(self.child)
         else:
-            for mutation in self.child.mutations(self.child.original_value()):
-                yield mutation
+            yield from self.child.mutations(self.child.original_value())
 
     @override
     def num_mutations(self, default_value):
