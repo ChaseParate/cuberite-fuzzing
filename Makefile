@@ -11,6 +11,9 @@ test:
 format:
 	uvx ruff check --fix $(FUZZING_DIRECTORY) && uvx ruff format $(FUZZING_DIRECTORY)
 
+format-check:
+	uvx ruff check $(FUZZING_DIRECTORY) && uvx ruff format --check $(FUZZING_DIRECTORY)
+
 build-cuberite:
 	-mkdir cuberite/build
 	cd cuberite/build && cmake .. && make -j
