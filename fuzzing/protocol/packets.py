@@ -3,25 +3,31 @@ from boofuzz import Block, Request, String, Word
 from fuzzing.models.varint_blocks import VarInt, VarIntSized
 from fuzzing.protocol import PROTOCOL_VERSION_NUMBER
 
+
+def create_packet(name: str, packet_id: int, block: Block) -> Request:
+    return Request(
+        name,
+        children=(
+            VarIntSized("length", children=(VarInt("packet_id", packet_id), block))
+        ),
+    )
+
+
 # https://minecraft.wiki/w/Java_Edition_protocol/Packets#Handshake
-HANDSHAKE = Request(
+HANDSHAKE = create_packet(
     "Handshake",
-    children=(
-        VarIntSized(
-            "length",
-            children=(
-                VarInt("packet_id", 0),
-                Block(
-                    "handshake_data",
-                    children=(
-                        VarInt("protocol_version", PROTOCOL_VERSION_NUMBER),
-                        String("server_address", max_len=255),
-                        Word("server_port", signed=False),
-                        # TODO: Replace this with a `boofuzz.Group`?
-                        VarInt("intent", 1),
-                    ),
-                ),
+    0,
+    Block(
+        "handshake_data",
+        children=(
+            # TODO: Should we experiment with fuzzing this?
+            VarInt("protocol_version", PROTOCOL_VERSION_NUMBER),
+            VarIntSized(
+                "server_address", children=(String("server_address_raw", max_len=255),)
             ),
-        )
+            Word("server_port", signed=False, fuzzable=True),
+            # TODO: Replace this with a `boofuzz.Group`?
+            VarInt("intent", 1),
+        ),
     ),
 )
