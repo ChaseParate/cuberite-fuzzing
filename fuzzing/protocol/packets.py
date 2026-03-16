@@ -23,7 +23,12 @@ HANDSHAKE = create_packet(
             # TODO: Should we experiment with fuzzing this?
             VarInt("protocol_version", PROTOCOL_VERSION_NUMBER),
             VarIntSized(
-                "server_address", children=(String("server_address_raw", max_len=255),)
+                "server_address",
+                children=(
+                    # TODO: We should consider disabling fuzzing for this and the port.
+                    #       Those fields are unused according to the spec and will likely just cause us to waste a bunch of time.
+                    String("server_address_raw", max_len=255),
+                ),
             ),
             Word("server_port", signed=False, fuzzable=True),
             # TODO: Replace this with a `boofuzz.Group`?
