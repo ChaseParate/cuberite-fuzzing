@@ -1,4 +1,4 @@
-from typing import override
+from typing import Iterable, override
 
 import boofuzz
 
@@ -41,7 +41,7 @@ class VarInt(boofuzz.BitField):
         )
 
     @override
-    def encode(self, value: int, _mutation_context) -> bytes:
+    def encode(self, value: int, mutation_context) -> bytes:
         return write_varint(value)
 
 
@@ -100,7 +100,7 @@ class VarIntSized(boofuzz.FuzzableBlock):
         self,
         name: str | None = None,
         request: boofuzz.Request | None = None,
-        children: tuple[boofuzz.Fuzzable, ...] | None = None,
+        children: Iterable[boofuzz.Fuzzable] | None = None,
         item_size: int = 1,
         *args,
         **kwargs,
@@ -109,14 +109,14 @@ class VarIntSized(boofuzz.FuzzableBlock):
             name=name,
             request=request,
             children=children,
-            fuzzable=False,
+            fuzzable=children is not None and any(child.fuzzable for child in children),
             *args,
             **kwargs,
         )
         self.item_size = item_size
 
     @override
-    def encode(self, _value, mutation_context) -> bytes:
+    def encode(self, value, mutation_context) -> bytes:
         data: bytes = self.get_child_data(mutation_context=mutation_context)
         size: bytes = write_varint(len(data) // self.item_size)
         return size + data
@@ -137,7 +137,7 @@ class VarLongSized(boofuzz.FuzzableBlock):
         self,
         name: str | None = None,
         request: boofuzz.Request | None = None,
-        children: tuple[boofuzz.Fuzzable, ...] | None = None,
+        children: Iterable[boofuzz.Fuzzable] | None = None,
         item_size: int = 1,
         *args,
         **kwargs,
@@ -146,14 +146,14 @@ class VarLongSized(boofuzz.FuzzableBlock):
             name=name,
             request=request,
             children=children,
-            fuzzable=False,
+            fuzzable=children is not None and any(child.fuzzable for child in children),
             *args,
             **kwargs,
         )
         self.item_size = item_size
 
     @override
-    def encode(self, _value, mutation_context) -> bytes:
+    def encode(self, value, mutation_context) -> bytes:
         data: bytes = self.get_child_data(mutation_context=mutation_context)
         size: bytes = write_varlong(len(data) // self.item_size)
         return size + data
