@@ -22,12 +22,9 @@ class PrefixedOptional(boofuzz.Fuzzable):
         **kwargs,
     ):
         self.child = child
-        fuzzable = False
-        if child is not None and child.fuzzable:
-            fuzzable = True
         super().__init__(
             name=name,
-            fuzzable=fuzzable,
+            fuzzable=child is not None and child.fuzzable,
             *args,
             **kwargs,
         )
@@ -56,6 +53,8 @@ class PrefixedOptional(boofuzz.Fuzzable):
     def encode(self, value, mutation_context) -> bytes:
         if value is None:
             return b"\x00"
+
+        assert self.child is not None
         return b"\x01" + self.child.encode(value, mutation_context)
 
 
@@ -78,10 +77,9 @@ class IDOrX(VarInt):
         **kwargs,
     ):
         self.child = child
-        default_value = 0
-        if isinstance(child, int):
-            default_value = child
-        super().__init__(name, default_value, fuzzable, *args, **kwargs)
+        super().__init__(
+            name, child if isinstance(child, int) else 0, fuzzable, *args, **kwargs
+        )
 
     @override
     def mutations(self, default_value):
