@@ -41,7 +41,7 @@ class VarInt(boofuzz.BitField):
         )
 
     @override
-    def encode(self, value: int, _mutation_context) -> bytes:
+    def encode(self, value: int, mutation_context) -> bytes:
         return write_varint(value)
 
 
