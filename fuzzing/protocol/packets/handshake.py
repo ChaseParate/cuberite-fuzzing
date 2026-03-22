@@ -7,7 +7,9 @@ from fuzzing.protocol.packets import create_packet
 # https://minecraft.wiki/w/Java_Edition_protocol/Packets#Handshake
 
 
-def create_handshake_packet(intent_field: Fuzzable) -> Request:
+def create_handshake_packet(
+    intent_field: Fuzzable, server_address_and_port_fuzzable=False
+) -> Request:
     return create_packet(
         "Handshake",
         0,
@@ -19,12 +21,18 @@ def create_handshake_packet(intent_field: Fuzzable) -> Request:
                 VarIntSized(
                     "server_address",
                     children=(
-                        # TODO: We should consider disabling fuzzing for this and the port.
-                        #       Those fields are unused according to the spec and will likely just cause us to waste a bunch of time.
-                        String("server_address_raw", max_len=255),
+                        String(
+                            "server_address_raw",
+                            max_len=255,
+                            fuzzable=server_address_and_port_fuzzable,
+                        ),
                     ),
                 ),
-                Word("server_port", signed=False, fuzzable=True),
+                Word(
+                    "server_port",
+                    signed=False,
+                    fuzzable=server_address_and_port_fuzzable,
+                ),
                 intent_field,
             ),
         ),
