@@ -16,4 +16,4 @@ dev = [
 ]
 
 [tool.ruff.lint]
-select = ["I"]
+select = ["I", "F401"]

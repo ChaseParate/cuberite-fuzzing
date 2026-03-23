@@ -28,14 +28,14 @@ EXAMPLE_STRINGS = [
 
 @pytest.mark.parametrize("example", EXAMPLE_STRINGS)
 def test_varint_sized(example: str):
-    block = VarIntSized("foo", children=(boofuzz.String("bar", default_value=example)))
+    block = VarIntSized("foo", children=[boofuzz.String("bar", default_value=example)])
     result = block.encode(block.get_value(None), None)
     assert result == varint.write_varint(len(example)) + example.encode("utf-8")
 
 
 @pytest.mark.parametrize("example", EXAMPLE_STRINGS)
 def test_varlong_sized(example: str):
-    block = VarLongSized("foo", children=(boofuzz.String("bar", default_value=example)))
+    block = VarLongSized("foo", children=[boofuzz.String("bar", default_value=example)])
     result = block.encode(block.get_value(None), None)
     assert result == varint.write_varlong(len(example)) + example.encode("utf-8")
 

@@ -1,18 +1,25 @@
+import dataclasses
 import struct
 
 SEGMENT_BITS = 0x7F
 CONTINUE_BIT = 0x80
 
 
+@dataclasses.dataclass(frozen=True, slots=True)
+class VarNumFromBytes:
+    value: int
+    length: int
+
+
 # Note: this doesn't sign numbers (Python numbers are infinite)
 # you have to do that yourself
-def read_varnum(varnum: bytes, max_len: int) -> int:
-    value: int = 0
-    position: int = 0
-    i: int = 0
+def read_varnum(varnum: bytes, max_len: int) -> VarNumFromBytes:
+    value = 0
+    position = 0
+    length = 0
 
     while True:
-        current = varnum[i]
+        current = varnum[length]
         value |= (current & SEGMENT_BITS) << position
         if (current & CONTINUE_BIT) == 0:
             break
@@ -21,19 +28,21 @@ def read_varnum(varnum: bytes, max_len: int) -> int:
             raise RuntimeError(
                 f"VarInt is too big to read: maximum length {max_len} bits"
             )
-        i += 1
+        length += 1
 
-    return value
-
-
-def read_varint(varint: bytes) -> int:
-    byte_value = struct.pack(">L", read_varnum(varint, 32))
-    return struct.unpack(">l", byte_value)[0]
+    return VarNumFromBytes(value, length + 1)
 
 
-def read_varlong(varlong: bytes) -> int:
-    byte_value = struct.pack(">Q", read_varnum(varlong, 64))
-    return struct.unpack(">q", byte_value)[0]
+def read_varint(b: bytes) -> VarNumFromBytes:
+    varnum = read_varnum(b, 32)
+    byte_value = struct.pack(">L", varnum.value)
+    return VarNumFromBytes(struct.unpack(">l", byte_value)[0], varnum.length)
+
+
+def read_varlong(b: bytes) -> VarNumFromBytes:
+    varnum = read_varnum(b, 64)
+    byte_value = struct.pack(">Q", varnum.value)
+    return VarNumFromBytes(struct.unpack(">q", byte_value)[0], varnum.length)
 
 
 def write_varnum(varnum: int, bit_size: int) -> bytes:
@@ -44,7 +53,7 @@ def write_varnum(varnum: int, bit_size: int) -> bytes:
     while True:
         if (varnum_cut & ~SEGMENT_BITS) == 0:
             value.append(varnum_cut)
-            return value
+            return bytes(value)
         value.append((varnum_cut & SEGMENT_BITS) | CONTINUE_BIT)
         varnum_cut = (varnum_cut & mask) >> 7
 

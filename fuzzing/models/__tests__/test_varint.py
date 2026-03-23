@@ -33,7 +33,7 @@ VARLONG_EXAMPLES = [
 
 @pytest.mark.parametrize(("number", "varint"), VARINT_EXAMPLES)
 def test_read_varint(number: int, varint: bytes):
-    assert read_varint(varint) == number
+    assert read_varint(varint).value == number
 
 
 @pytest.mark.parametrize(("number", "varint"), VARINT_EXAMPLES)
@@ -43,7 +43,7 @@ def test_write_varint(number: int, varint: bytes):
 
 @pytest.mark.parametrize(("number", "varlong"), VARLONG_EXAMPLES)
 def test_read_varlong(number: int, varlong: bytes):
-    assert read_varlong(varlong) == number
+    assert read_varlong(varlong).value == number
 
 
 @pytest.mark.parametrize(("number", "varlong"), VARLONG_EXAMPLES)

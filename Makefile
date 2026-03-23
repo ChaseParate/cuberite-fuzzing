@@ -4,8 +4,10 @@ CUBERITE_DIRECTORY := cuberite
 CUBERITE_BUILD_DIRECTORY := $(CUBERITE_DIRECTORY)/build
 CUBERITE_BINARY := $(CUBERITE_BUILD_DIRECTORY)/Server/Cuberite
 
-RUN_CUBERITE_DIRECTORY = $(shell mktemp -d)
+RUN_CUBERITE_DIRECTORY := /tmp/run-cuberite
 RUN_CUBERITE_PORT := 25565
+
+CUBERITE_CONFIG_SETTINGS := cuberite-config/settings.ini
 
 .PHONY: fuzz test format format-check build-cuberite clean-cuberite run-cuberite
 
@@ -36,5 +38,6 @@ clean-cuberite:
 	-rm -r $(CUBERITE_BUILD_DIRECTORY)
 
 run-cuberite: build-cuberite
-	@echo Running Cuberite in \"$(RUN_CUBERITE_DIRECTORY)\".
+	mkdir -p $(RUN_CUBERITE_DIRECTORY)
+	cp $(CUBERITE_CONFIG_SETTINGS) $(RUN_CUBERITE_DIRECTORY)
 	cd $(RUN_CUBERITE_DIRECTORY) && $(abspath $(CUBERITE_BINARY)) -p $(RUN_CUBERITE_PORT)
