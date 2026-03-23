@@ -8,10 +8,10 @@ from fuzzing.protocol.packets import create_packet
 
 
 def create_handshake_packet(
-    intent_field: Fuzzable, server_address_and_port_fuzzable=False
+    subname: str, intent_field: Fuzzable, server_address_and_port_fuzzable=False
 ) -> Request:
     return create_packet(
-        "Handshake",
+        f"Handshake ({subname})",
         0,
         Block(
             "handshake_data",
@@ -39,8 +39,8 @@ def create_handshake_packet(
     )
 
 
-HANDSHAKE_STATUS = create_handshake_packet(VarInt("intent", 1))
-HANDSHAKE_LOGIN = create_handshake_packet(VarInt("intent", 2))
+HANDSHAKE_STATUS = create_handshake_packet("Status", VarInt("intent", 1))
+HANDSHAKE_LOGIN = create_handshake_packet("Login", VarInt("intent", 2))
 HANDSHAKE_ANY = create_handshake_packet(
-    VarInt("intent", fuzz_values=[1, 2, 3], fuzzable=True)
+    "Any", VarInt("intent", fuzz_values=[1, 2, 3], fuzzable=True)
 )
