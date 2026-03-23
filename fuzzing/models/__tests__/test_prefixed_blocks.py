@@ -1,5 +1,3 @@
-import logging
-
 import boofuzz
 
 from fuzzing.models.prefixed_blocks import IDOrX, PrefixedOptional
