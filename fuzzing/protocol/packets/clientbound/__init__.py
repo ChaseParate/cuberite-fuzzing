@@ -7,7 +7,7 @@ from fuzzing.models.varint import VarInt
 
 def read_basic_packet_header(b: bytes, protocol_number: int) -> bytes | None:
     try:
-        b, length = VarInt.read(b)
+        length, b = VarInt.read(b)
     except IndexError:
         return None
 
@@ -18,18 +18,18 @@ def read_basic_packet_header(b: bytes, protocol_number: int) -> bytes | None:
 
 
 def read_string(b: bytes) -> tuple[str, bytes]:
-    b, length = VarInt.read(b)
+    length, b = VarInt.read(b)
     string = b[:length]
     return (string.decode("utf-8"), b[length:])
 
 
 def read_compressed_packet(b: bytes, protocol_number: int) -> bytes | None:
     try:
-        b, packet_length = VarInt.read(b)
+        packet_length, b = VarInt.read(b)
     except IndexError:
         return None
 
-    b, uncompressed_length = VarInt.read(b)
+    uncompressed_length, b = VarInt.read(b)
     decomp = zlib.decompress(b) if uncompressed_length != 0 else b
 
     if decomp[0] == protocol_number:
@@ -49,7 +49,7 @@ class SetCompression:
         if not pack:
             return (None, b)
 
-        pack, threshold = VarInt.read(pack)
+        threshold, pack = VarInt.read(pack)
 
         return (cls(threshold=threshold), pack)
 

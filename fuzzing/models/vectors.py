@@ -125,7 +125,7 @@ class PositionBlock(boofuzz.FuzzableBlock):
                 ),
             ),
             fuzzable=fuzzable,
-            *args,
+            *args,  # ty: ignore[parameter-already-assigned]
             **kwargs,
         )
 
@@ -173,7 +173,7 @@ class LpVec3Block(boofuzz.FuzzableBlock):
                 boofuzz.BitField("scale", scale, 31, endian=boofuzz.BIG_ENDIAN),
             ),
             fuzzable=fuzzable,
-            *args,
+            *args,  # ty: ignore[parameter-already-assigned]
             **kwargs,
         )
 
