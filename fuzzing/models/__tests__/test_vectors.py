@@ -1,6 +1,6 @@
 import pytest
 
-from fuzzing.models.vectors import Position, PositionBlock, LpVec3
+from fuzzing.models.vectors import Position, PositionBlock, LpVec3, LpVec3Block
 
 POS_EXAMPLES = [
     (Position(0, 0, 0),                  b'\x00\x00\x00\x00\x00\x00\x00\x00'),
@@ -37,3 +37,9 @@ def test_read_vec3(vec3: LpVec3, packed: bytes):
     assert abs(vec.x - vec3.x) < 0.001
     assert abs(vec.y - vec3.y) < 0.001
     assert abs(vec.z - vec3.z) < 0.001
+
+@pytest.mark.parametrize(("vec3", "packed"), VEC3_EXAMPLES)
+def test_vec3_block(vec3: LpVec3, packed: bytes):
+    block = LpVec3Block("vec3", vec3)
+    encoded = block.encode(block.get_value(None), None)
+    assert encoded == packed
