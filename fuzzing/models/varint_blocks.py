@@ -24,19 +24,17 @@ class VarInt(boofuzz.BitField):
         fuzz_values: list[int] | None = None,
         full_range: bool = False,
         fuzzable: bool = False,
-        *args,
         **kwargs,
     ):
         super().__init__(
-            name,
-            default_value,
-            32,
-            max_num,
-            kwargs.pop("endian", boofuzz.LITTLE_ENDIAN),
-            kwargs.pop("output_format", "binary"),
-            True,
-            full_range,
-            *args,
+            name=name,
+            default_value=default_value,
+            max_num=max_num,
+            fuzz_values=fuzz_values,
+            full_range=full_range,
+            fuzzable=fuzzable,
+            signed=True,
+            width=32,
             **kwargs,
         )
 
@@ -64,19 +62,17 @@ class VarLong(boofuzz.BitField):
         fuzz_values: list[int] | None = None,
         full_range: bool = False,
         fuzzable: bool = False,
-        *args,
         **kwargs,
     ):
         super().__init__(
-            name,
-            default_value,
-            64,
-            max_num,
-            kwargs.pop("endian", boofuzz.LITTLE_ENDIAN),
-            kwargs.pop("output_format", "binary"),
-            True,
-            full_range,
-            *args,
+            name=name,
+            default_value=default_value,
+            max_num=max_num,
+            fuzz_values=fuzz_values,
+            full_range=full_range,
+            fuzzable=fuzzable,
+            signed=True,
+            width=64,
             **kwargs,
         )
 
@@ -102,14 +98,12 @@ class VarIntSized(boofuzz.FuzzableBlock):
         request: boofuzz.Request | None = None,
         children: Iterable[boofuzz.Fuzzable] | None = None,
         item_size: int = 1,
-        *args,
         **kwargs,
     ):
         super().__init__(
-            name,
-            request,
-            children,
-            *args,
+            name=name,
+            request=request,
+            children=children,
             fuzzable=children is not None and any(child.fuzzable for child in children),
             **kwargs,
         )
@@ -139,14 +133,12 @@ class VarLongSized(boofuzz.FuzzableBlock):
         request: boofuzz.Request | None = None,
         children: Iterable[boofuzz.Fuzzable] | None = None,
         item_size: int = 1,
-        *args,
         **kwargs,
     ):
         super().__init__(
-            name,
-            request,
-            children,
-            *args,
+            name=name,
+            request=request,
+            children=children,
             fuzzable=children is not None and any(child.fuzzable for child in children),
             **kwargs,
         )
