@@ -20,9 +20,13 @@ class MinecraftServer(BaseMonitor):
     return_code: int
     process: subprocess.Popen | None
     process_alive: bool
+    address: str
+    port: int
 
-    def __init__(self, start_command: list[str]):
+    def __init__(self, start_command: list[str], address: str, port: int):
         self.start_command = start_command
+        self.address = address
+        self.port = port
         self.full_log = Queue()
         self.current_log = ""
         self.return_code = 0
@@ -91,7 +95,7 @@ class MinecraftServer(BaseMonitor):
             try:
                 with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
                     s.settimeout(START_INTERVAL)
-                    result = s.connect_ex(("localhost", 25565))
+                    result = s.connect_ex((self.address, self.port))
                     if result == 0:
                         print("target started")
                         return True

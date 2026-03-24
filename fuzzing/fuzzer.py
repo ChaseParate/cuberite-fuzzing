@@ -13,7 +13,7 @@ def fuzz(port: int, address: str):
     session = Session(
         target=Target(
             connection=TCPSocketConnection(address, port),
-            monitors=[MinecraftServer(["make", "run-cuberite"])],
+            monitors=[MinecraftServer(["make", "run-cuberite"], address, port)],
         ),
         receive_data_after_each_request=False,
     )
