@@ -27,3 +27,5 @@ def create_compressed_packet(
             Block("compressed", children=children, encoder=compressed(threshold))
         ],
     )
+
+    return Request(name, children=packet)
