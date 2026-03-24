@@ -108,7 +108,6 @@ class PositionBlock(boofuzz.FuzzableBlock):
         name: str | None = None,
         default: Position = Position(0, 0, 0),
         fuzzable: bool = True,
-        *args,
         **kwargs,
     ):
         super().__init__(
@@ -125,7 +124,6 @@ class PositionBlock(boofuzz.FuzzableBlock):
                 ),
             ),
             fuzzable=fuzzable,
-            *args,  # ty: ignore[parameter-already-assigned]
             **kwargs,
         )
 
@@ -156,7 +154,6 @@ class LpVec3Block(boofuzz.FuzzableBlock):
         name: str | None = None,
         default: LpVec3 = LpVec3(0, 0, 0),
         fuzzable: bool = True,
-        *args,
         **kwargs,
     ):
         max_coord = max(abs(default.x), abs(default.y), abs(default.z))
@@ -173,7 +170,6 @@ class LpVec3Block(boofuzz.FuzzableBlock):
                 boofuzz.BitField("scale", scale, 31, endian=boofuzz.BIG_ENDIAN),
             ),
             fuzzable=fuzzable,
-            *args,  # ty: ignore[parameter-already-assigned]
             **kwargs,
         )
 
