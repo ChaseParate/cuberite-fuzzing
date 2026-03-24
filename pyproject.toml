@@ -13,6 +13,7 @@ dev = [
     "pytest>=9.0.2",
     "lorem-text>=3.0",
     "ruff>=0.15.4",
+    "ty>=0.0.24",
 ]
 
 [tool.ruff.lint]

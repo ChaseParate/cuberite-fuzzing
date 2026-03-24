@@ -18,10 +18,13 @@ test:
 	uv run pytest $(FUZZING_DIRECTORY)
 
 format:
-	uvx ruff check --fix $(FUZZING_DIRECTORY) && uvx ruff format $(FUZZING_DIRECTORY)
+	uv run ruff check --fix $(FUZZING_DIRECTORY) && uvx ruff format $(FUZZING_DIRECTORY)
 
 format-check:
-	uvx ruff check $(FUZZING_DIRECTORY) && uvx ruff format --check $(FUZZING_DIRECTORY)
+	uv run ruff check $(FUZZING_DIRECTORY) && uvx ruff format --check $(FUZZING_DIRECTORY)
+
+type-check:
+	uv run ty check $(FUZZING_DIRECTORY)
 
 # -------------------------------
 

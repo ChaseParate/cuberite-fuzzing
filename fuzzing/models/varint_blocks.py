@@ -24,7 +24,6 @@ class VarInt(boofuzz.BitField):
         fuzz_values: list[int] | None = None,
         full_range: bool = False,
         fuzzable: bool = False,
-        *args,
         **kwargs,
     ):
         super().__init__(
@@ -36,7 +35,6 @@ class VarInt(boofuzz.BitField):
             fuzzable=fuzzable,
             signed=True,
             width=32,
-            *args,
             **kwargs,
         )
 
@@ -64,7 +62,6 @@ class VarLong(boofuzz.BitField):
         fuzz_values: list[int] | None = None,
         full_range: bool = False,
         fuzzable: bool = False,
-        *args,
         **kwargs,
     ):
         super().__init__(
@@ -76,7 +73,6 @@ class VarLong(boofuzz.BitField):
             fuzzable=fuzzable,
             signed=True,
             width=64,
-            *args,
             **kwargs,
         )
 
@@ -102,7 +98,6 @@ class VarIntSized(boofuzz.FuzzableBlock):
         request: boofuzz.Request | None = None,
         children: Iterable[boofuzz.Fuzzable] | None = None,
         item_size: int = 1,
-        *args,
         **kwargs,
     ):
         super().__init__(
@@ -110,7 +105,6 @@ class VarIntSized(boofuzz.FuzzableBlock):
             request=request,
             children=children,
             fuzzable=children is not None and any(child.fuzzable for child in children),
-            *args,
             **kwargs,
         )
         self.item_size = item_size
@@ -139,7 +133,6 @@ class VarLongSized(boofuzz.FuzzableBlock):
         request: boofuzz.Request | None = None,
         children: Iterable[boofuzz.Fuzzable] | None = None,
         item_size: int = 1,
-        *args,
         **kwargs,
     ):
         super().__init__(
@@ -147,7 +140,6 @@ class VarLongSized(boofuzz.FuzzableBlock):
             request=request,
             children=children,
             fuzzable=children is not None and any(child.fuzzable for child in children),
-            *args,
             **kwargs,
         )
         self.item_size = item_size

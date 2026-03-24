@@ -30,20 +30,20 @@ class PrefixedOptional(boofuzz.Fuzzable):
         )
 
     @override
-    def mutations(self, _default_value):
+    def mutations(self, default_value):
         if self.child is None:
             yield None
             return
         yield from self.child.mutations(self.child.original_value())
 
     @override
-    def get_value(self, mutation_context):
+    def get_value(self, mutation_context=None):
         if self.child is None:
             return None
         return self.child.get_value(mutation_context)
 
     @override
-    def num_mutations(self, _default_value):
+    def num_mutations(self, default_value):
         if self.child is None:
             return 1
         else:
@@ -96,7 +96,7 @@ class IDOrX(VarInt):
             return self.child.num_mutations(self.child.original_value())
 
     @override
-    def get_value(self, mutation_context):
+    def get_value(self, mutation_context=None):
         if isinstance(self.child, int):
             return super().get_value(mutation_context)
         else:
