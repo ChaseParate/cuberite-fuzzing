@@ -151,7 +151,7 @@ class LpVec3Block(boofuzz.FuzzableBlock):
                 boofuzz.BitField("x", x, 15, endian=boofuzz.BIG_ENDIAN),
                 boofuzz.BitField("y", y, 15, endian=boofuzz.BIG_ENDIAN),
                 boofuzz.BitField("z", z, 15, endian=boofuzz.BIG_ENDIAN),
-                boofuzz.BitField("scale", scale, 32, endian=boofuzz.BIG_ENDIAN)
+                boofuzz.BitField("scale", scale, 31, endian=boofuzz.BIG_ENDIAN)
             ),
             fuzzable = fuzzable,
             *args,
@@ -168,7 +168,8 @@ class LpVec3Block(boofuzz.FuzzableBlock):
         y = s.read("uint:15")
         s.read("bits:1")
         z = s.read("uint:15")
-        scale = s.read("uint:32")
+        s.read("bits:1")
+        scale = s.read("uint:31")
         vec = LpVec3(_unpack(x) * scale, _unpack(y) * scale, _unpack(z) * scale)
         return vec.write()
 
