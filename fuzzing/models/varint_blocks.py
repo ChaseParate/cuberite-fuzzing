@@ -28,14 +28,14 @@ class VarInt(boofuzz.BitField):
         **kwargs,
     ):
         super().__init__(
-            name=name,
-            default_value=default_value,
-            max_num=max_num,
-            fuzz_values=fuzz_values,
-            full_range=full_range,
-            fuzzable=fuzzable,
-            signed=True,
-            width=32,
+            name,
+            default_value,
+            32,
+            max_num,
+            kwargs.pop("endian", boofuzz.LITTLE_ENDIAN),
+            kwargs.pop("output_format", "binary"),
+            True,
+            full_range,
             *args,
             **kwargs,
         )
@@ -68,14 +68,14 @@ class VarLong(boofuzz.BitField):
         **kwargs,
     ):
         super().__init__(
-            name=name,
-            default_value=default_value,
-            max_num=max_num,
-            fuzz_values=fuzz_values,
-            full_range=full_range,
-            fuzzable=fuzzable,
-            signed=True,
-            width=64,
+            name,
+            default_value,
+            64,
+            max_num,
+            kwargs.pop("endian", boofuzz.LITTLE_ENDIAN),
+            kwargs.pop("output_format", "binary"),
+            True,
+            full_range,
             *args,
             **kwargs,
         )
@@ -106,11 +106,11 @@ class VarIntSized(boofuzz.FuzzableBlock):
         **kwargs,
     ):
         super().__init__(
-            name=name,
-            request=request,
-            children=children,
-            fuzzable=children is not None and any(child.fuzzable for child in children),
+            name,
+            request,
+            children,
             *args,
+            fuzzable=children is not None and any(child.fuzzable for child in children),
             **kwargs,
         )
         self.item_size = item_size
@@ -143,11 +143,11 @@ class VarLongSized(boofuzz.FuzzableBlock):
         **kwargs,
     ):
         super().__init__(
-            name=name,
-            request=request,
-            children=children,
-            fuzzable=children is not None and any(child.fuzzable for child in children),
+            name,
+            request,
+            children,
             *args,
+            fuzzable=children is not None and any(child.fuzzable for child in children),
             **kwargs,
         )
         self.item_size = item_size
