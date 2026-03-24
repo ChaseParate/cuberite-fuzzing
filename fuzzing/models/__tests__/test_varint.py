@@ -1,6 +1,6 @@
 import pytest
 
-from fuzzing.models.varint import read_varint, read_varlong, write_varint, write_varlong
+from fuzzing.models.varint import VarInt, VarLong
 
 VARINT_EXAMPLES = [
     (0, b"\x00"),
@@ -33,29 +33,33 @@ VARLONG_EXAMPLES = [
 
 @pytest.mark.parametrize(("number", "varint"), VARINT_EXAMPLES)
 def test_read_varint(number: int, varint: bytes):
-    assert read_varint(varint).value == number
+    num, rest = VarInt.read(varint)
+    assert len(rest) == 0
+    assert num == number
 
 
 @pytest.mark.parametrize(("number", "varint"), VARINT_EXAMPLES)
 def test_write_varint(number: int, varint: bytes):
-    assert write_varint(number) == varint
+    assert VarInt(number).write() == varint
 
 
 @pytest.mark.parametrize(("number", "varlong"), VARLONG_EXAMPLES)
 def test_read_varlong(number: int, varlong: bytes):
-    assert read_varlong(varlong).value == number
+    num, rest = VarLong.read(varlong)
+    assert len(rest) == 0
+    assert num == number
 
 
 @pytest.mark.parametrize(("number", "varlong"), VARLONG_EXAMPLES)
 def test_write_varlong(number: int, varlong: bytes):
-    assert write_varlong(number) == varlong
+    assert VarLong(number).write() == varlong
 
 
 def test_read_varint_toolarge():
     with pytest.raises(RuntimeError):
-        read_varint(b"\xff\xff\xff\xff\xff\xff")
+        VarInt.read(b"\xff\xff\xff\xff\xff\xff")
 
 
 def test_read_varlong_toolarge():
     with pytest.raises(RuntimeError):
-        read_varlong(b"\x80\x80\x80\x80\x80\x80\x80\x80\x80\x80\x01")
+        VarLong.read(b"\x80\x80\x80\x80\x80\x80\x80\x80\x80\x80\x01")
