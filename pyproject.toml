@@ -6,6 +6,7 @@ requires-python = ">=3.13"
 dependencies = [
     "bitstring>=4.4.0",
     "boofuzz>=0.4.2",
+    "click>=8.3.1",
 ]
 
 [dependency-groups]

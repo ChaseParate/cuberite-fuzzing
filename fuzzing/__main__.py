@@ -1,18 +1,14 @@
-from boofuzz import Session, Target, TCPSocketConnection
+import click
 
-from fuzzing.protocol.connect_protocol import connect_protocol
+from fuzzing.fuzzer import fuzz
 
 
-def main():
-    session = Session(
-        target=Target(connection=TCPSocketConnection("localhost", 25565)),
-        receive_data_after_each_request=False,
-    )
+@click.group()
+def cli():
+    pass
 
-    connect_protocol(session)
 
-    session.fuzz()
-
+cli.add_command(fuzz)
 
 if __name__ == "__main__":
-    main()
+    cli()
