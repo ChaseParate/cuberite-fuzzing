@@ -1,6 +1,8 @@
-from typing import Callable
-from fuzzing.models.varint import write_varint
 import zlib
+from typing import Callable
+
+from fuzzing.models.varint import write_varint
+
 
 def compressed(threshold: int = 0) -> Callable[[bytes], bytes]:
     def compress(data: bytes) -> bytes:
@@ -8,4 +10,5 @@ def compressed(threshold: int = 0) -> Callable[[bytes], bytes]:
             return write_varint(0) + data
         else:
             return write_varint(len(data)) + zlib.compress(data)
+
     return compress

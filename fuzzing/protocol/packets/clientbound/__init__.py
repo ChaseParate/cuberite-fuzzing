@@ -1,4 +1,5 @@
-import dataclasses, zlib
+import dataclasses
+import zlib
 from typing import Self
 
 from fuzzing.models.varint import read_varint
@@ -10,7 +11,7 @@ def read_basic_packet(b: bytes, protocol_number: int) -> tuple[bytes, bool]:
         packet_length_varnum = read_varint(b)
     except IndexError:
         return (init_b, False)
-    
+
     b = b[packet_length_varnum.length :]
 
     if b[0] == protocol_number:
@@ -18,14 +19,12 @@ def read_basic_packet(b: bytes, protocol_number: int) -> tuple[bytes, bool]:
     else:
         return (init_b, False)
 
+
 def read_string(b: bytes) -> tuple[str, bytes]:
     string_length_varnum = read_varint(b)
     string_start = string_length_varnum.length
     string_end = string_start + string_length_varnum.value
-    return (
-        b[string_start : string_end].decode("utf-8"),
-        b[string_end :]
-    )
+    return (b[string_start:string_end].decode("utf-8"), b[string_end:])
 
 
 def read_compressed_packet(b: bytes, protocol_number: int) -> tuple[bytes, bool]:
@@ -62,6 +61,7 @@ class SetCompression:
 
         return (cls(threshold=threshold_varnum.value), b)
 
+
 @dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
 class Disconnect:
     # https://minecraft.wiki/w/Java_Edition_protocol/Packets#Disconnect_(login)
@@ -72,7 +72,7 @@ class Disconnect:
         b, ok = read_basic_packet(b, 0x0)
         if not ok:
             return (None, b)
-        
+
         reason, b = read_string(b)
         return (cls(reason=reason), b)
 

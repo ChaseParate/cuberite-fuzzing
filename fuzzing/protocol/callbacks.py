@@ -1,7 +1,11 @@
 from boofuzz import Fuzzable, FuzzLogger, Session, Target
 from boofuzz.sessions.connection import Connection
 
-from fuzzing.protocol.packets.clientbound import LoginSuccess, SetCompression, Disconnect
+from fuzzing.protocol.packets.clientbound import (
+    Disconnect,
+    LoginSuccess,
+    SetCompression,
+)
 
 
 def login_success_callback(
