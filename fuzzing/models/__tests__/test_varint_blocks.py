@@ -2,20 +2,20 @@ import boofuzz
 import pytest
 from lorem_text import lorem
 
-from fuzzing.models import varint
-from fuzzing.models.varint_blocks import VarInt, VarIntSized, VarLong, VarLongSized
+from fuzzing.models.varint import VarInt, VarLong
+from fuzzing.models.varint_blocks import VarIntBlock, VarIntSized, VarLongBlock, VarLongSized
 
 
 def test_varint_mutations():
-    block = VarInt("foo", 0)
+    block = VarIntBlock("foo", 0)
     for mutation in block.mutations(0):
-        assert block.encode(mutation, None) == varint.write_varint(mutation)
+        assert block.encode(mutation, None) == VarInt(mutation).write()
 
 
 def test_varlong_mutations():
-    block = VarLong("foo", 0)
+    block = VarLongBlock("foo", 0)
     for mutation in block.mutations(0):
-        assert block.encode(mutation, None) == varint.write_varlong(mutation)
+        assert block.encode(mutation, None) == VarLong(mutation).write()
 
 
 EXAMPLE_STRINGS = [
@@ -30,14 +30,14 @@ EXAMPLE_STRINGS = [
 def test_varint_sized(example: str):
     block = VarIntSized("foo", children=[boofuzz.String("bar", default_value=example)])
     result = block.encode(block.get_value(None), None)
-    assert result == varint.write_varint(len(example)) + example.encode("utf-8")
+    assert result == VarInt(len(example)).write() + example.encode("utf-8")
 
 
 @pytest.mark.parametrize("example", EXAMPLE_STRINGS)
 def test_varlong_sized(example: str):
     block = VarLongSized("foo", children=[boofuzz.String("bar", default_value=example)])
     result = block.encode(block.get_value(None), None)
-    assert result == varint.write_varlong(len(example)) + example.encode("utf-8")
+    assert result == VarLong(len(example)).write() + example.encode("utf-8")
 
 
 def test_varint_sized_array():
@@ -54,7 +54,7 @@ def test_varint_sized_array_huge():
     huge_arr = [boofuzz.Word(f"word{i}", 4, endian=">") for i in range(1024)]
     arr = VarIntSized("foo", children=tuple(huge_arr), item_size=2)
     result = arr.encode(arr.get_value(None), None)
-    assert result == varint.write_varint(1024) + b"\x00\x04" * 1024
+    assert result == VarInt(1024).write() + b"\x00\x04" * 1024
 
 
 def test_varlong_sized_array():
@@ -71,4 +71,4 @@ def test_varlong_sized_array_huge():
     huge_arr = [boofuzz.Word(f"word{i}", 4, endian=">") for i in range(1024)]
     arr = VarLongSized("foo", children=tuple(huge_arr), item_size=2)
     result = arr.encode(arr.get_value(None), None)
-    assert result == varint.write_varlong(1024) + b"\x00\x04" * 1024
+    assert result == VarLong(1024).write() + b"\x00\x04" * 1024

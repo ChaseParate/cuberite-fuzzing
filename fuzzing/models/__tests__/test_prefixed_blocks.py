@@ -1,7 +1,7 @@
 import boofuzz
 
 from fuzzing.models.prefixed_blocks import IDOrX, PrefixedOptional
-from fuzzing.models.varint_blocks import VarInt
+from fuzzing.models.varint_blocks import VarIntBlock
 
 
 def test_optional_empty():
@@ -47,7 +47,7 @@ def test_id_or_x_x():
 
 
 def test_id_or_x_id_mutations():
-    num = VarInt("foo", 42)
+    num = VarIntBlock("foo", 42)
     block = IDOrX("bar", child=42)
     assert block.num_mutations(None) == num.num_mutations(42)
 

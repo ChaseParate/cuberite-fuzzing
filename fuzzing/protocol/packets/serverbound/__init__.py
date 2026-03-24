@@ -1,11 +1,11 @@
 from boofuzz import Block, Fuzzable, Request
 
-from fuzzing.models.varint_blocks import VarInt, VarIntSized
+from fuzzing.models.varint_blocks import VarIntBlock, VarIntSized
 from fuzzing.protocol.encoders import compressed
 
 
 def create_packet(name: str, packet_id: int, inner: Fuzzable | None) -> Request:
-    children: list[Fuzzable] = [VarInt("packet_id", packet_id)]
+    children: list[Fuzzable] = [VarIntBlock("packet_id", packet_id)]
     if inner is not None:
         children.append(inner)
 
@@ -17,7 +17,7 @@ def create_packet(name: str, packet_id: int, inner: Fuzzable | None) -> Request:
 def create_compressed_packet(
     name: str, packet_id: int, inner: Fuzzable | None, threshold: int = 0
 ) -> Request:
-    children: list[Fuzzable] = [VarInt("packet_id", packet_id)]
+    children: list[Fuzzable] = [VarIntBlock("packet_id", packet_id)]
     if inner is not None:
         children.append(inner)
 

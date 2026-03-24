@@ -2,10 +2,10 @@ from typing import Iterable, override
 
 import boofuzz
 
-from fuzzing.models.varint import write_varint, write_varlong
+from fuzzing.models.varint import VarInt, VarLong
 
 
-class VarInt(boofuzz.BitField):
+class VarIntBlock(boofuzz.BitField):
     """32 bit VarInt primitive.
     :param name: Name, for referencing later
     :param default_value: Default integer value, defaults to 0
@@ -40,10 +40,10 @@ class VarInt(boofuzz.BitField):
 
     @override
     def encode(self, value: int, mutation_context) -> bytes:
-        return write_varint(value)
+        return VarInt(value).write()
 
 
-class VarLong(boofuzz.BitField):
+class VarLongBlock(boofuzz.BitField):
     """64 bit VarLong primitive.
     :param name: Name, for referencing later
     :param default_value: Default integer value, defaults to 0
@@ -78,7 +78,7 @@ class VarLong(boofuzz.BitField):
 
     @override
     def encode(self, value: int, mutation_context) -> bytes:
-        return write_varlong(value)
+        return VarLong(value).write()
 
 
 class VarIntSized(boofuzz.FuzzableBlock):
@@ -112,7 +112,7 @@ class VarIntSized(boofuzz.FuzzableBlock):
     @override
     def encode(self, value, mutation_context) -> bytes:
         data: bytes = self.get_child_data(mutation_context=mutation_context)
-        size: bytes = write_varint(len(data) // self.item_size)
+        size: bytes = VarInt(len(data) // self.item_size).write()
         return size + data
 
 
@@ -147,5 +147,5 @@ class VarLongSized(boofuzz.FuzzableBlock):
     @override
     def encode(self, value, mutation_context) -> bytes:
         data: bytes = self.get_child_data(mutation_context=mutation_context)
-        size: bytes = write_varlong(len(data) // self.item_size)
+        size: bytes = VarLong(len(data) // self.item_size).write()
         return size + data

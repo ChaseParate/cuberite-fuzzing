@@ -2,16 +2,14 @@ import dataclasses
 import zlib
 from typing import Self
 
-from fuzzing.models.varint import read_varint
+from fuzzing.models.varint import VarInt
 
 
 def read_basic_packet_header(b: bytes, protocol_number: int) -> bytes | None:
     try:
-        packet_length_varnum = read_varint(b)
+        b, length = VarInt.read(b)
     except IndexError:
         return None
-
-    b = b[packet_length_varnum.length :]
 
     if b[0] == protocol_number:
         return b[1:]
@@ -20,26 +18,22 @@ def read_basic_packet_header(b: bytes, protocol_number: int) -> bytes | None:
 
 
 def read_string(b: bytes) -> tuple[str, bytes]:
-    string_length_varnum = read_varint(b)
-    string_start = string_length_varnum.length
-    string_end = string_start + string_length_varnum.value
-    return (b[string_start:string_end].decode("utf-8"), b[string_end:])
+    b, length = VarInt.read(b)
+    string = b[:length]
+    return (string.decode("utf-8"), b[length:])
 
 
 def read_compressed_packet(b: bytes, protocol_number: int) -> bytes | None:
-    init_b = b
     try:
-        packet_length_varnum = read_varint(b)
+        b, packet_length = VarInt.read(b)
     except IndexError:
         return None
-    b = b[packet_length_varnum.length :]
 
-    uncompressed_length_varnum = read_varint(b)
-    b = b[uncompressed_length_varnum.length :]
-    decomp = zlib.decompress(b) if uncompressed_length_varnum.value != 0 else b
+    b, uncompressed_length = VarInt.read(b)
+    decomp = zlib.decompress(b) if uncompressed_length != 0 else b
 
-    if b[0] == protocol_number:
-        return b[1:]
+    if decomp[0] == protocol_number:
+        return decomp[1:]
     else:
         return None
 
@@ -55,10 +49,9 @@ class SetCompression:
         if not pack:
             return (None, b)
 
-        threshold_varnum = read_varint(pack)
-        pack = pack[threshold_varnum.length :]
+        pack, threshold = VarInt.read(pack)
 
-        return (cls(threshold=threshold_varnum.value), pack)
+        return (cls(threshold=threshold), pack)
 
 
 @dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)

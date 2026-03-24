@@ -5,7 +5,7 @@ from typing import Self, override
 import boofuzz
 from bitstring import BitArray, BitStream
 
-from fuzzing.models.varint import read_varint, write_varint
+from fuzzing.models.varint import VarInt
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,7 +55,7 @@ class LpVec3:
         if data[0] == 0:
             return (cls(0.0, 0.0, 0.0), data[1:])
         assert len(data) >= 6
-        length = 6
+        rem = data[6:]
         vec3_bytes = bytes([data[2], data[3], data[4], data[5], data[1], data[0]])
         s = BitStream(vec3_bytes)
         packed_z = s.read("uint:15")
@@ -64,13 +64,12 @@ class LpVec3:
         continuation = s.read("bool")
         scale = s.read("uint:2")
         if continuation:
-            scale_msb = read_varint(data[6:])
-            scale |= scale_msb.value << 2
-            length += scale_msb.length
+            scale_msb, rem = VarInt.read(rem)
+            scale |= scale_msb << 2
         x = _unpack(packed_x) * scale
         y = _unpack(packed_y) * scale
         z = _unpack(packed_z) * scale
-        return (cls(x, y, z), data[length:])
+        return (cls(x, y, z), rem)
 
     def write(self) -> bytes:
         max_coord = max(abs(self.x), abs(self.y), abs(self.z))
@@ -89,7 +88,7 @@ class LpVec3:
             s.append(f"bool={continuation}")
             s.append(f"uint:2={scale & 3}")
             if continuation:
-                s.append(write_varint(scale >> 2))
+                s.append(VarInt(scale >> 2).write())
             final = s.tobytes()
             return bytes(
                 [final[5], final[4], final[0], final[1], final[2], final[3], *final[6:]]
