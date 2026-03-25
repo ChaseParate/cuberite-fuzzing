@@ -97,7 +97,7 @@ class MinecraftServer(BaseMonitor):
             print("waiting for target to start...")
             try:
                 while True:
-                    print("server log:", self.full_log.get_nowait())
+                    print("server log:", self.full_log.get_nowait().strip())
             except Empty:
                 pass
             try:
