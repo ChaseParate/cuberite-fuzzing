@@ -5,50 +5,56 @@ from typing import Callable, Self
 from fuzzing.models.varint import VarInt
 
 
-def _read_packet_header(packet: bytes) -> tuple[bytes, bytes]:
-    length, rest = VarInt.read(packet)
-    return (rest[:length], rest[length:])
+def _split_next_packet(raw: bytes) -> tuple[bytes | None, bytes]:
+    """
+    Separates the first packet from the remaining data via the first packet's header.
+    """
+    try:
+        length, rest = VarInt.read(raw)
+        return (rest[:length], rest[length:])
+    except IndexError:
+        return (None, raw)
 
 
 def _read_packet(
-    packet: bytes,
+    raw: bytes,
     expected_packet_id: int,
     *,
     decompress_packet_fn: Callable[[bytes], bytes] | None = None,
 ) -> tuple[bytes | None, bytes]:
-    packet, rest = _read_packet_header(packet)
+    """
+    Reads a packet, returning the packet data and any extra bytes if successful, or None and the original bytes if unsuccessful.
+    """
+    packet, rest = _split_next_packet(raw)
+    if packet is None:
+        return (None, raw)
 
     if decompress_packet_fn is not None:
         packet = decompress_packet_fn(packet)
 
     id, packet = VarInt.read(packet)
-    return (packet if id == expected_packet_id else None, rest)
+    return (packet, rest) if id == expected_packet_id else (None, raw)
 
 
 def read_uncompressed_packet(
-    packet: bytes, expected_packet_id: int
+    raw: bytes, expected_packet_id: int
 ) -> tuple[bytes | None, bytes]:
-    return _read_packet(packet, expected_packet_id)
+    return _read_packet(raw, expected_packet_id)
 
 
 def read_compressed_packet(
-    packet: bytes, expected_packet_id: int
+    raw: bytes, expected_packet_id: int
 ) -> tuple[bytes | None, bytes]:
     def decompress_packet(packet: bytes) -> bytes:
         data_length, packet = VarInt.read(packet)
-        if data_length > 0:
-            packet = zlib.decompress(packet)
-
         return zlib.decompress(packet) if data_length > 0 else packet
 
-    return _read_packet(
-        packet, expected_packet_id, decompress_packet_fn=decompress_packet
-    )
+    return _read_packet(raw, expected_packet_id, decompress_packet_fn=decompress_packet)
 
 
-def read_string(b: bytes) -> tuple[str, bytes]:
-    length, b = VarInt.read(b)
-    return (b[:length].decode("utf-8"), b[length:])
+def read_string(raw: bytes) -> tuple[str, bytes]:
+    length, raw = VarInt.read(raw)
+    return (raw[:length].decode("utf-8"), raw[length:])
 
 
 @dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
@@ -57,8 +63,8 @@ class SetCompression:
     threshold: int
 
     @classmethod
-    def from_bytes(cls, b: bytes) -> tuple[Self | None, bytes]:
-        packet, rest = read_uncompressed_packet(b, 0x3)
+    def from_bytes(cls, raw: bytes) -> tuple[Self | None, bytes]:
+        packet, rest = read_uncompressed_packet(raw, 0x3)
         if packet is None:
             return (None, rest)
 
@@ -72,8 +78,8 @@ class Disconnect:
     reason: str
 
     @classmethod
-    def from_bytes(cls, b: bytes) -> tuple[Self | None, bytes]:
-        packet, rest = read_uncompressed_packet(b, 0x0)
+    def from_bytes(cls, raw: bytes) -> tuple[Self | None, bytes]:
+        packet, rest = read_uncompressed_packet(raw, 0x0)
         if packet is None:
             return (None, rest)
 
@@ -88,8 +94,8 @@ class LoginSuccess:
     # game_profile: GameProfile
 
     @classmethod
-    def from_bytes(cls, b: bytes) -> tuple[Self | None, bytes]:
-        packet, rest = read_compressed_packet(b, 0x2)
+    def from_bytes(cls, raw: bytes) -> tuple[Self | None, bytes]:
+        packet, rest = read_compressed_packet(raw, 0x2)
         if packet is None:
             return (None, rest)
 
