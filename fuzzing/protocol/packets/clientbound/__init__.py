@@ -1,41 +1,54 @@
 import dataclasses
 import zlib
-from typing import Self
+from typing import Callable, Self
 
 from fuzzing.models.varint import VarInt
 
 
-def read_basic_packet_header(b: bytes, protocol_number: int) -> bytes | None:
-    try:
-        length, b = VarInt.read(b)
-    except IndexError:
-        return None
+def _read_packet_header(packet: bytes) -> tuple[bytes, bytes]:
+    length, rest = VarInt.read(packet)
+    return (rest[:length], rest[length:])
 
-    if b[0] == protocol_number:
-        return b[1:]
-    else:
-        return None
+
+def _read_packet(
+    packet: bytes,
+    expected_packet_id: int,
+    *,
+    decompress_packet_fn: Callable[[bytes], bytes] | None = None,
+) -> tuple[bytes | None, bytes]:
+    packet, rest = _read_packet_header(packet)
+
+    if decompress_packet_fn is not None:
+        packet = decompress_packet_fn(packet)
+
+    id, packet = VarInt.read(packet)
+    return (packet if id == expected_packet_id else None, rest)
+
+
+def read_uncompressed_packet(
+    packet: bytes, expected_packet_id: int
+) -> tuple[bytes | None, bytes]:
+    return _read_packet(packet, expected_packet_id)
+
+
+def read_compressed_packet(
+    packet: bytes, expected_packet_id: int
+) -> tuple[bytes | None, bytes]:
+    def decompress_packet(packet: bytes) -> bytes:
+        data_length, packet = VarInt.read(packet)
+        if data_length > 0:
+            packet = zlib.decompress(packet)
+
+        return zlib.decompress(packet) if data_length > 0 else packet
+
+    return _read_packet(
+        packet, expected_packet_id, decompress_packet_fn=decompress_packet
+    )
 
 
 def read_string(b: bytes) -> tuple[str, bytes]:
     length, b = VarInt.read(b)
-    string = b[:length]
-    return (string.decode("utf-8"), b[length:])
-
-
-def read_compressed_packet(b: bytes, protocol_number: int) -> bytes | None:
-    try:
-        packet_length, b = VarInt.read(b)
-    except IndexError:
-        return None
-
-    uncompressed_length, b = VarInt.read(b)
-    decomp = zlib.decompress(b) if uncompressed_length != 0 else b
-
-    if decomp[0] == protocol_number:
-        return decomp[1:]
-    else:
-        return None
+    return (b[:length].decode("utf-8"), b[length:])
 
 
 @dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
@@ -45,13 +58,12 @@ class SetCompression:
 
     @classmethod
     def from_bytes(cls, b: bytes) -> tuple[Self | None, bytes]:
-        pack = read_basic_packet_header(b, 0x3)
-        if not pack:
-            return (None, b)
+        packet, rest = read_uncompressed_packet(b, 0x3)
+        if packet is None:
+            return (None, rest)
 
-        threshold, pack = VarInt.read(pack)
-
-        return (cls(threshold=threshold), pack)
+        threshold, packet_data = VarInt.read(packet)
+        return (cls(threshold=threshold), rest)
 
 
 @dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
@@ -61,26 +73,26 @@ class Disconnect:
 
     @classmethod
     def from_bytes(cls, b: bytes) -> tuple[Self | None, bytes]:
-        pack = read_basic_packet_header(b, 0x0)
-        if not pack:
-            return (None, b)
+        packet, rest = read_uncompressed_packet(b, 0x0)
+        if packet is None:
+            return (None, rest)
 
-        reason, pack = read_string(pack)
-        return (cls(reason=reason), pack)
+        reason, packet_data = read_string(packet)
+        return (cls(reason=reason), rest)
 
 
 @dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
 class LoginSuccess:
     # https://minecraft.wiki/w/Java_Edition_protocol/Packets#Login_Success
+
     # game_profile: GameProfile
 
     @classmethod
     def from_bytes(cls, b: bytes) -> tuple[Self | None, bytes]:
-        pack = read_compressed_packet(b, 0x2)
-        if not pack:
-            return (None, b)
+        packet, rest = read_compressed_packet(b, 0x2)
+        if packet is None:
+            return (None, rest)
 
         # TODO: Parse game_profile, if you _really_ want. I don't think it's necessary.
 
-        # TODO: Return the actual continuation (after parsing `game_profile`).
-        return (cls(), pack)
+        return (cls(), rest)
