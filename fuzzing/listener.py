@@ -9,7 +9,7 @@ from typing import IO, override
 from boofuzz.monitors import BaseMonitor
 from boofuzz.sessions import Session
 
-START_TIMEOUT = 30.0
+START_TIMEOUT = 60.0
 START_INTERVAL = 1.0
 
 
@@ -70,6 +70,10 @@ class MinecraftServer(BaseMonitor):
         return res
 
     @override
+    def retrieve_data(self) -> str:
+        return f"Server Log:\n{self.current_log}"
+
+    @override
     def pre_send(
         self, target=None, fuzz_data_logger=None, session: Session | None = None
     ):
@@ -92,10 +96,18 @@ class MinecraftServer(BaseMonitor):
         while True:
             print("waiting for target to start...")
             try:
+                while True:
+                    print("server log:", self.full_log.get_nowait())
+            except Empty:
+                pass
+            try:
                 with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
                     s.settimeout(START_INTERVAL)
                     result = s.connect_ex((self.address, self.port))
                     if result == 0:
+                        s.close()
+                        print("waiting 3 seconds for the target to settle...")
+                        time.sleep(3)
                         print("target started")
                         return True
             except socket.error as e:
@@ -117,7 +129,10 @@ class MinecraftServer(BaseMonitor):
                 print("target already running")
                 return True
         self.process = subprocess.Popen(
-            self.start_command, stdout=subprocess.PIPE, bufsize=1
+            self.start_command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
         )
         t = Thread(
             target=self._enqueue_output, args=(self.process.stdout, self.full_log)
