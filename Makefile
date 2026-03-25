@@ -12,7 +12,10 @@ CUBERITE_CONFIG_SETTINGS := cuberite-config/settings.ini
 .PHONY: fuzz test format format-check build-cuberite clean-cuberite run-cuberite
 
 fuzz:
-	uv run -m $(FUZZING_DIRECTORY)
+	rm -rf $(RUN_CUBERITE_DIRECTORY)
+	uv run -m $(FUZZING_DIRECTORY) fuzz\
+		--port $(RUN_CUBERITE_PORT)\
+		--address localhost
 
 test:
 	uv run pytest $(FUZZING_DIRECTORY)
