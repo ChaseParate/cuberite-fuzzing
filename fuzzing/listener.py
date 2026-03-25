@@ -15,11 +15,10 @@ START_INTERVAL = 1.0
 
 class MinecraftServer(BaseMonitor):
     start_command: list[str]
-    full_log: Queue
+    full_log: Queue[str]
     current_log: str
     return_code: int
     process: subprocess.Popen | None
-    process_alive: bool
     address: str
     port: int
 
@@ -39,13 +38,13 @@ class MinecraftServer(BaseMonitor):
     @override
     def get_crash_synopsis(self) -> str:
         self.post_send()
-        return f"process returned exit code {self.return_code}:\n" + self.current_log
+        return f"process returned exit code {self.return_code}:\n{self.current_log}"
 
     def _post_send(self) -> bool:
         lines = 0
         try:
             while True:
-                self.current_log += self.full_log.get_nowait().decode("utf-8")
+                self.current_log += self.full_log.get_nowait()
                 lines += 1
         except Empty:
             print(f"read {lines} output lines")
@@ -85,7 +84,7 @@ class MinecraftServer(BaseMonitor):
     @staticmethod
     def _enqueue_output(out: IO, queue: Queue):
         for line in iter(out.readline, b""):
-            queue.put(line)
+            queue.put(line if isinstance(line, str) else line.decode("utf-8"))
         out.close()
 
     def _wait_started(self) -> bool:
