@@ -14,8 +14,8 @@ dev = [
     "pre-commit>=4.5.1",
     "pytest>=9.0.2",
     "lorem-text>=3.0",
-    "ruff>=0.15.4",
-    "ty>=0.0.24",
+    "ruff>=0.15.7",
+    "ty>=0.0.25",
 ]
 
 [tool.ruff.lint]
