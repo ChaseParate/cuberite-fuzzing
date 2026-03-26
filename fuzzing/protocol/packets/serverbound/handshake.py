@@ -42,5 +42,5 @@ def create_handshake_packet(
 HANDSHAKE_STATUS = create_handshake_packet("Status", VarIntBlock("intent", 1))
 HANDSHAKE_LOGIN = create_handshake_packet("Login", VarIntBlock("intent", 2))
 HANDSHAKE_ANY = create_handshake_packet(
-    "Any", VarIntBlock("intent", fuzz_values=[1, 2, 3], fuzzable=True)
+    "Any", VarIntBlock("intent", fuzz_values=[1, 2], fuzzable=True)
 )

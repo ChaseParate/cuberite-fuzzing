@@ -24,8 +24,6 @@ def create_login_start_packet(fields_fuzzable: bool) -> Request:
                         ),
                     ),
                 ),
-                # Cuberite doesn't accept this, for some reason. Maybe this field is only required on later versions?
-                # BitField("uuid", width=16, fuzzable=fields_fuzzable),
             ),
         ),
     )

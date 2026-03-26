@@ -121,9 +121,10 @@ class Disconnect:
 
 @dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
 class LoginSuccess:
-    # https://minecraft.wiki/w/Java_Edition_protocol/Packets#Login_Success
+    # https://c4k3.github.io/wiki.vg/Protocol.html#Login_Success
 
-    # game_profile: GameProfile
+    uuid: str
+    username: str
 
     @classmethod
     def from_bytes(cls, raw: bytes) -> tuple[Self | None, bytes]:
@@ -134,5 +135,7 @@ class LoginSuccess:
 
     @classmethod
     def from_raw_contents(cls, raw: bytes) -> Self:
-        # TODO: Parse game_profile, if you _really_ want. I don't think it's necessary.
-        return cls()
+        uuid, packet = read_string(raw)
+        username, packet = read_string(packet)
+
+        return cls(uuid=uuid, username=username)
