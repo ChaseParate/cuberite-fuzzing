@@ -10,7 +10,6 @@ from fuzzing.protocol.packets.serverbound.handshake import (
     HANDSHAKE_ANY,
     HANDSHAKE_LOGIN,
 )
-from fuzzing.protocol.packets.serverbound.login_acknowledged import LOGIN_ACKNOWLEDGED
 from fuzzing.protocol.packets.serverbound.login_start import LOGIN_START
 from fuzzing.protocol.state import ClientState
 
@@ -21,7 +20,8 @@ def connect_protocol(session: Session) -> None:
     state.register_callback(0x02, handle_login_success)
     state.register_callback(0x03, handle_set_compression)
     state.register_callback(0x00, handle_disconnect)
+
+    # Login Sequence: https://c4k3.github.io/wiki.vg/Protocol_FAQ.html#What.27s_the_normal_login_sequence_for_a_client.3F
     session.connect(HANDSHAKE_LOGIN, callback=state.reset())
     session.connect(HANDSHAKE_LOGIN, LOGIN_START)
-    session.connect(LOGIN_START, LOGIN_ACKNOWLEDGED, state)
-    session.connect(LOGIN_ACKNOWLEDGED, HANDSHAKE_ANY, state)  # TEMP
+    session.connect(LOGIN_START, HANDSHAKE_ANY, state) # TEMP
