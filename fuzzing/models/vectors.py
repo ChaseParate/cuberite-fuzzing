@@ -23,8 +23,8 @@ class Position:
         assert len(data) >= 8
         s = BitStream(data)
         x = s.read("int:26")
-        z = s.read("int:26")
         y = s.read("int:12")
+        z = s.read("int:26")
         return (cls(x, y, z), data[8:])
 
 
@@ -114,13 +114,25 @@ class PositionBlock(boofuzz.FuzzableBlock):
             name=name,
             children=(
                 boofuzz.BitField(
-                    "x", default.x, 26, endian=boofuzz.BIG_ENDIAN, signed=True
+                    "x",
+                    default.x,
+                    26,
+                    endian=boofuzz.BIG_ENDIAN,
+                    signed=True,
                 ),
                 boofuzz.BitField(
-                    "z", default.z, 26, endian=boofuzz.BIG_ENDIAN, signed=True
+                    "y",
+                    default.y,
+                    12,
+                    endian=boofuzz.BIG_ENDIAN,
+                    signed=True,
                 ),
                 boofuzz.BitField(
-                    "y", default.y, 12, endian=boofuzz.BIG_ENDIAN, signed=True
+                    "z",
+                    default.z,
+                    26,
+                    endian=boofuzz.BIG_ENDIAN,
+                    signed=True,
                 ),
             ),
             fuzzable=fuzzable,
@@ -134,10 +146,10 @@ class PositionBlock(boofuzz.FuzzableBlock):
         out = BitArray()
         s.read("bits:6")
         out.append(s.read("bits:26"))
-        s.read("bits:6")
-        out.append(s.read("bits:26"))
         s.read("bits:4")
         out.append(s.read("bits:12"))
+        s.read("bits:6")
+        out.append(s.read("bits:26"))
         return out.tobytes()
 
 

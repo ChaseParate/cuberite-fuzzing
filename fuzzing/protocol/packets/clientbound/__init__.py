@@ -4,6 +4,7 @@ import zlib
 from typing import Callable, Self
 
 from fuzzing.models.varint import VarInt
+from fuzzing.models.vectors import Position
 
 
 def _split_next_packet(raw: bytes) -> tuple[bytes | None, bytes]:
@@ -158,8 +159,10 @@ class LoginSuccess:
 
     @classmethod
     def from_raw_contents(cls, raw: bytes) -> Self:
-        uuid, packet = read_string(raw)
-        username, packet = read_string(packet)
+        uuid, raw = read_string(raw)
+        username, raw = read_string(raw)
+
+        assert len(raw) == 0, "from_raw_contents should parse the entire packet"
 
         return cls(uuid=uuid, username=username)
 
@@ -193,6 +196,8 @@ class JoinGame:
         level_type, raw = read_string(raw)
         reduced_debug_info, raw = read_integer(raw, 1, False)
 
+        assert len(raw) == 0, "from_raw_contents should parse the entire packet"
+
         return cls(
             entity_id=entity_id,
             gamemode=gamemode,
@@ -202,3 +207,26 @@ class JoinGame:
             level_type=level_type,
             reduced_debug_info=bool(reduced_debug_info),
         )
+
+
+@dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
+class SpawnPosition:
+    # https://c4k3.github.io/wiki.vg/Protocol.html#Spawn_Position
+
+    position: Position
+
+    @classmethod
+    def from_bytes(cls, raw: bytes) -> tuple[Self | None, bytes]:
+        packet, rest = read_compressed_packet(raw, 0x46)
+        if packet is None:
+            return (None, rest)
+
+        return (cls.from_raw_contents(raw), rest)
+
+    @classmethod
+    def from_raw_contents(cls, raw: bytes) -> Self:
+        position, raw = Position.read(raw)
+
+        assert len(raw) == 0, "from_raw_contents should parse the entire packet"
+
+        return cls(position=position)

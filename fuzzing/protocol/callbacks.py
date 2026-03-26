@@ -6,6 +6,7 @@ from fuzzing.protocol.packets.clientbound import (
     JoinGame,
     LoginSuccess,
     SetCompression,
+    SpawnPosition,
 )
 from fuzzing.protocol.packets.serverbound import create_raw_packet
 from fuzzing.protocol.state import ClientState
@@ -81,3 +82,16 @@ def handle_join_game(
 ):
     join_game = JoinGame.from_raw_contents(raw)
     logger.log_info(f"Joined game: '{join_game}'")
+
+
+def handle_spawn_position(
+    raw: bytes,
+    state: ClientState,
+    target: Target,
+    logger: FuzzLogger,
+    session: Session,
+    node: Fuzzable,
+    edge: Connection,
+):
+    spawn_position = SpawnPosition.from_raw_contents(raw)
+    logger.log_info(f"Spawn position: '{spawn_position}'")
