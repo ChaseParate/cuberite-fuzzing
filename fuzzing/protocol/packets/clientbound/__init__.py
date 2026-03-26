@@ -1,4 +1,5 @@
 import dataclasses
+import struct
 import zlib
 from typing import Callable, Self
 
@@ -81,6 +82,28 @@ def read_string(raw: bytes) -> tuple[str, bytes]:
     return (raw[:length].decode("utf-8"), raw[length:])
 
 
+def _get_integer_size_format(size: int) -> str:
+    match size:
+        case 1:
+            return "b"
+        case 2:
+            return "h"
+        case 4:
+            return "i"
+        case 8:
+            return "d"
+        case _:
+            raise ValueError("Invalid integer size")
+
+
+def read_integer(raw: bytes, size: int, signed: bool) -> tuple[int, bytes]:
+    size_format = _get_integer_size_format(size)
+    size_format = size_format.upper() if signed else size_format.lower()
+
+    int_bytes, rest = raw[:size], raw[size:]
+    return (struct.unpack(f"<{size_format}", int_bytes)[0], rest)
+
+
 @dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
 class SetCompression:
     # https://minecraft.wiki/w/Java_Edition_protocol/Packets#Set_Compression
@@ -139,3 +162,43 @@ class LoginSuccess:
         username, packet = read_string(packet)
 
         return cls(uuid=uuid, username=username)
+
+
+@dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
+class JoinGame:
+    # https://c4k3.github.io/wiki.vg/Protocol.html#Join_Game
+
+    entity_id: int
+    gamemode: int
+    dimension: int
+    difficulty: int
+    max_players: int
+    level_type: str
+    reduced_debug_info: bool
+
+    @classmethod
+    def from_bytes(cls, raw: bytes) -> tuple[Self | None, bytes]:
+        packet, rest = read_compressed_packet(raw, 0x23)
+        if packet is None:
+            return (None, rest)
+        return (cls.from_raw_contents(packet), rest)
+
+    @classmethod
+    def from_raw_contents(cls, raw: bytes) -> Self:
+        entity_id, raw = read_integer(raw, 4, True)
+        gamemode, raw = read_integer(raw, 1, False)
+        dimension, raw = read_integer(raw, 4, True)
+        difficulty, raw = read_integer(raw, 1, False)
+        max_players, raw = read_integer(raw, 1, False)
+        level_type, raw = read_string(raw)
+        reduced_debug_info, raw = read_integer(raw, 1, False)
+
+        return cls(
+            entity_id=entity_id,
+            gamemode=gamemode,
+            dimension=dimension,
+            difficulty=difficulty,
+            max_players=max_players,
+            level_type=level_type,
+            reduced_debug_info=bool(reduced_debug_info),
+        )

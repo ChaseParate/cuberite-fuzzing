@@ -2,6 +2,7 @@ from boofuzz import Session
 
 from fuzzing.protocol.callbacks import (
     handle_disconnect,
+    handle_join_game,
     handle_keepalive,
     handle_login_success,
     handle_set_compression,
@@ -20,8 +21,9 @@ def connect_protocol(session: Session) -> None:
     state.register_callback(0x02, handle_login_success)
     state.register_callback(0x03, handle_set_compression)
     state.register_callback(0x00, handle_disconnect)
+    state.register_callback(0x23, handle_join_game)
 
     # Login Sequence: https://c4k3.github.io/wiki.vg/Protocol_FAQ.html#What.27s_the_normal_login_sequence_for_a_client.3F
     session.connect(HANDSHAKE_LOGIN, callback=state.reset())
     session.connect(HANDSHAKE_LOGIN, LOGIN_START)
-    session.connect(LOGIN_START, HANDSHAKE_ANY, state) # TEMP
+    session.connect(LOGIN_START, HANDSHAKE_ANY, state)  # TEMP

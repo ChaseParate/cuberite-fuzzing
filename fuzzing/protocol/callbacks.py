@@ -3,6 +3,7 @@ from boofuzz.sessions.connection import Connection
 
 from fuzzing.protocol.packets.clientbound import (
     Disconnect,
+    JoinGame,
     LoginSuccess,
     SetCompression,
 )
@@ -67,3 +68,16 @@ def handle_set_compression(
     set_compression = SetCompression.from_raw_contents(raw)
     logger.log_info(f"Set compression threshold to {set_compression.threshold}")
     state.compression_threshold = set_compression.threshold
+
+
+def handle_join_game(
+    raw: bytes,
+    state: ClientState,
+    target: Target,
+    logger: FuzzLogger,
+    session: Session,
+    node: Fuzzable,
+    edge: Connection,
+):
+    join_game = JoinGame.from_raw_contents(raw)
+    logger.log_info(f"Joined game: '{join_game}'")
