@@ -5,6 +5,7 @@ from fuzzing.protocol.packets.clientbound import (
     Disconnect,
     JoinGame,
     LoginSuccess,
+    ServerDifficulty,
     SetCompression,
     SpawnPosition,
 )
@@ -95,3 +96,16 @@ def handle_spawn_position(
 ):
     spawn_position = SpawnPosition.from_raw_contents(raw)
     logger.log_info(f"Spawn position: '{spawn_position}'")
+
+
+def handle_server_difficulty(
+    raw: bytes,
+    state: ClientState,
+    target: Target,
+    logger: FuzzLogger,
+    session: Session,
+    node: Fuzzable,
+    edge: Connection,
+):
+    server_difficulty = ServerDifficulty.from_raw_contents(raw)
+    logger.log_info(f"Server difficulty: '{server_difficulty}'")

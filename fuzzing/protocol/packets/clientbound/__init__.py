@@ -241,3 +241,26 @@ class SpawnPosition:
         assert len(raw) == 0, "from_raw_contents should parse the entire packet"
 
         return cls(position=position)
+
+
+@dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
+class ServerDifficulty:
+    # https://c4k3.github.io/wiki.vg/Protocol.html#Server_Difficulty
+
+    difficulty: int
+
+    @classmethod
+    def from_bytes(cls, raw: bytes) -> tuple[Self | None, bytes]:
+        packet, rest = read_compressed_packet(raw, 0x46)
+        if packet is None:
+            return (None, rest)
+
+        return (cls.from_raw_contents(raw), rest)
+
+    @classmethod
+    def from_raw_contents(cls, raw: bytes) -> Self:
+        difficulty, raw = read_integer(raw, 1, False)
+
+        assert len(raw) == 0, "from_raw_contents should parse the entire packet"
+
+        return cls(difficulty=difficulty)
