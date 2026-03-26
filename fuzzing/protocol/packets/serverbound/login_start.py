@@ -3,13 +3,13 @@ from boofuzz import Block, Request, String
 from fuzzing.models.varint_blocks import VarIntSized
 from fuzzing.protocol.packets.serverbound import create_packet
 
-# https://minecraft.wiki/w/Java_Edition_protocol/Packets#Login_Start
+# https://c4k3.github.io/wiki.vg/Protocol.html#Login_Start
 
 
 def create_login_start_packet(fields_fuzzable: bool) -> Request:
     return create_packet(
         "Login Start",
-        0,
+        0x0,
         Block(
             "login_start_data",
             children=(

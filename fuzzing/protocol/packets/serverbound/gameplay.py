@@ -7,6 +7,8 @@ from fuzzing.protocol.state import ClientState
 
 
 def chat_packet(state: ClientState, max_len: int | None = None) -> Fuzzable:
+    # https://c4k3.github.io/wiki.vg/Protocol.html#Chat_Message_.28serverbound.29
+
     return create_packet(
         "Chat",
         0x2,
@@ -23,6 +25,8 @@ def tab_complete_packet(
     is_command: bool = False,
     looking_at: Position | PositionBlock | None = None,
 ) -> Fuzzable:
+    # https://c4k3.github.io/wiki.vg/Protocol.html#Tab-Complete_.28serverbound.29
+
     if looking_at is None:
         position_segment = [Byte("Has Position", 0, fuzzable=False)]
     elif isinstance(looking_at, Position):
@@ -52,6 +56,8 @@ def plugin_message_packet(
     max_length: int | None = None,
     max_channel_length: int | None = None,
 ) -> Fuzzable:
+    # https://c4k3.github.io/wiki.vg/Protocol.html#Plugin_Message_.28serverbound.29
+
     return create_packet(
         "Plugin Message",
         0x9,

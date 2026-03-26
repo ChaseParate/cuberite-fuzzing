@@ -4,7 +4,7 @@ from fuzzing.models.varint_blocks import VarIntBlock, VarIntSized
 from fuzzing.protocol import PROTOCOL_VERSION_NUMBER
 from fuzzing.protocol.packets.serverbound import create_packet
 
-# https://minecraft.wiki/w/Java_Edition_protocol/Packets#Handshake
+# https://c4k3.github.io/wiki.vg/Protocol.html#Handshake
 
 
 def create_handshake_packet(
@@ -12,7 +12,7 @@ def create_handshake_packet(
 ) -> Request:
     return create_packet(
         f"Handshake ({subname})",
-        0,
+        0x0,
         Block(
             "handshake_data",
             children=(
