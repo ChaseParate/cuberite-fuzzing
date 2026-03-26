@@ -29,7 +29,7 @@ def create_packet(
 def create_raw_packet(
     packet_id: int, inner: bytes | None, threshold: int | None = None
 ) -> bytes:
-    contents: bytes = bytes([packet_id])
+    contents: bytes = VarInt(packet_id).write()
     if inner is not None:
         contents = contents + inner
 
