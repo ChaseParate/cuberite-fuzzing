@@ -1,7 +1,7 @@
 import dataclasses
 import struct
 import zlib
-from typing import Callable, Self
+from typing import Callable, Literal, Self
 
 from fuzzing.models.varint import VarInt
 from fuzzing.models.vectors import Position
@@ -83,7 +83,10 @@ def read_string(raw: bytes) -> tuple[str, bytes]:
     return (raw[:length].decode("utf-8"), raw[length:])
 
 
-def _get_integer_size_format(size: int) -> str:
+type IntegerSize = Literal[1, 2, 4, 8]
+
+
+def _get_integer_size_format(size: IntegerSize) -> str:
     match size:
         case 1:
             return "b"
@@ -92,17 +95,25 @@ def _get_integer_size_format(size: int) -> str:
         case 4:
             return "i"
         case 8:
-            return "d"
+            return "q"
         case _:
             raise ValueError("Invalid integer size")
 
 
-def read_integer(raw: bytes, size: int, signed: bool) -> tuple[int, bytes]:
+def read_integer(raw: bytes, size: IntegerSize, signed: bool) -> tuple[int, bytes]:
     size_format = _get_integer_size_format(size)
     size_format = size_format.upper() if signed else size_format.lower()
 
     int_bytes, rest = raw[:size], raw[size:]
     return (struct.unpack(f"<{size_format}", int_bytes)[0], rest)
+
+
+def read_boolean(raw: bytes) -> tuple[bool, bytes]:
+    boolean, rest = read_integer(raw, 1, False)
+    if boolean not in (0, 1):
+        raise ValueError("Invalid boolean")
+
+    return (bool(boolean), rest)
 
 
 @dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
@@ -194,7 +205,7 @@ class JoinGame:
         difficulty, raw = read_integer(raw, 1, False)
         max_players, raw = read_integer(raw, 1, False)
         level_type, raw = read_string(raw)
-        reduced_debug_info, raw = read_integer(raw, 1, False)
+        reduced_debug_info, raw = read_boolean(raw)
 
         assert len(raw) == 0, "from_raw_contents should parse the entire packet"
 
@@ -205,7 +216,7 @@ class JoinGame:
             difficulty=difficulty,
             max_players=max_players,
             level_type=level_type,
-            reduced_debug_info=bool(reduced_debug_info),
+            reduced_debug_info=reduced_debug_info,
         )
 
 
