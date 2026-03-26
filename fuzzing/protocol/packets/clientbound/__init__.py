@@ -36,6 +36,30 @@ def _read_packet(
     return (packet, rest) if id == expected_packet_id else (None, raw)
 
 
+@dataclasses.dataclass(frozen=True, slots=True)
+class RawPacket:
+    id: int
+    contents: bytes
+
+
+def read_any_packet(
+    raw: bytes, threshold: int | None = None
+) -> tuple[RawPacket | None, bytes]:
+    """
+    Reads any packet, returning the packet ID, the packet raw contents, and the remaining data.
+    """
+    packet, rest = _split_next_packet(raw)
+    if packet is None:
+        return (None, raw)
+
+    if threshold is not None:
+        data_length, packet = VarInt.read(packet)
+        packet = zlib.decompress(packet) if data_length > 0 else packet
+
+    packet_id, packet = VarInt.read(packet)
+    return (RawPacket(packet_id, packet), rest)
+
+
 def read_uncompressed_packet(
     raw: bytes, expected_packet_id: int
 ) -> tuple[bytes | None, bytes]:
@@ -67,9 +91,13 @@ class SetCompression:
         packet, rest = read_uncompressed_packet(raw, 0x3)
         if packet is None:
             return (None, rest)
+        return (cls.from_raw_contents(packet), rest)
 
-        threshold, packet_data = VarInt.read(packet)
-        return (cls(threshold=threshold), rest)
+    @classmethod
+    def from_raw_contents(cls, raw: bytes) -> Self:
+        threshold, rest = VarInt.read(raw)
+        assert len(rest) == 0, "from_raw_contents should parse the entire packet"
+        return cls(threshold=threshold)
 
 
 @dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
@@ -82,9 +110,13 @@ class Disconnect:
         packet, rest = read_uncompressed_packet(raw, 0x0)
         if packet is None:
             return (None, rest)
+        return (cls.from_raw_contents(packet), rest)
 
-        reason, packet_data = read_string(packet)
-        return (cls(reason=reason), rest)
+    @classmethod
+    def from_raw_contents(cls, raw: bytes) -> Self:
+        reason, rest = read_string(raw)
+        assert len(rest) == 0, "from_raw_contents should parse the entire packet"
+        return cls(reason=reason)
 
 
 @dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
@@ -98,7 +130,9 @@ class LoginSuccess:
         packet, rest = read_compressed_packet(raw, 0x2)
         if packet is None:
             return (None, rest)
+        return (cls.from_raw_contents(packet), rest)
 
+    @classmethod
+    def from_raw_contents(cls, raw: bytes) -> Self:
         # TODO: Parse game_profile, if you _really_ want. I don't think it's necessary.
-
-        return (cls(), rest)
+        return cls()
