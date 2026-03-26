@@ -3,7 +3,7 @@ from typing import Callable, Self
 from boofuzz import Fuzzable, FuzzLogger, Session, Target
 from boofuzz.sessions.connection import Connection
 
-from fuzzing.protocol.packets.clientbound import read_any_packet
+from fuzzing.protocol.packets.clientbound import RawPacket
 
 
 class ClientState:
@@ -59,7 +59,7 @@ class ClientState:
     ):
         data = target.recv()
         while len(data) > 0:
-            packet, data = read_any_packet(data, self.compression_threshold)
+            packet, data = RawPacket.read(data, self.compression_threshold)
             if packet is None:
                 if len(data) != 0:
                     fuzz_data_logger.log_error("received incomplete packet")

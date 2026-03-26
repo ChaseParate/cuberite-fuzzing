@@ -41,23 +41,23 @@ class RawPacket:
     id: int
     contents: bytes
 
+    @classmethod
+    def read(
+        cls, raw: bytes, threshold: int | None = None
+    ) -> tuple[Self | None, bytes]:
+        """
+        Reads any packet, returning the packet ID, the packet raw contents, and the remaining data.
+        """
+        packet, rest = _split_next_packet(raw)
+        if packet is None:
+            return (None, raw)
 
-def read_any_packet(
-    raw: bytes, threshold: int | None = None
-) -> tuple[RawPacket | None, bytes]:
-    """
-    Reads any packet, returning the packet ID, the packet raw contents, and the remaining data.
-    """
-    packet, rest = _split_next_packet(raw)
-    if packet is None:
-        return (None, raw)
+        if threshold is not None:
+            data_length, packet = VarInt.read(packet)
+            packet = zlib.decompress(packet) if data_length > 0 else packet
 
-    if threshold is not None:
-        data_length, packet = VarInt.read(packet)
-        packet = zlib.decompress(packet) if data_length > 0 else packet
-
-    packet_id, packet = VarInt.read(packet)
-    return (RawPacket(packet_id, packet), rest)
+        packet_id, packet = VarInt.read(packet)
+        return (cls(packet_id, packet), rest)
 
 
 def read_uncompressed_packet(

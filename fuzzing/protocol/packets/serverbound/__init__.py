@@ -13,15 +13,12 @@ def create_packet(
     if inner is not None:
         children.append(inner)
 
-    if threshold is None:
-        packet = VarIntSized("length", children=children)
-    else:
-        packet = VarIntSized(
-            "length",
-            children=[
-                Block("compressed", children=children, encoder=compressed(threshold))
-            ],
-        )
+    packet = VarIntSized(
+        "length",
+        children=children
+        if threshold is None
+        else [Block("compressed", children=children, encoder=compressed(threshold))],
+    )
 
     return Request(name, children=packet)
 
@@ -31,7 +28,7 @@ def create_raw_packet(
 ) -> bytes:
     contents: bytes = VarInt(packet_id).write()
     if inner is not None:
-        contents = contents + inner
+        contents += inner
 
     if threshold is not None:
         if len(contents) >= threshold:
