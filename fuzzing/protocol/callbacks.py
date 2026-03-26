@@ -5,6 +5,7 @@ from fuzzing.protocol.packets.clientbound import (
     Disconnect,
     JoinGame,
     LoginSuccess,
+    PlayerListItem,
     ServerDifficulty,
     SetCompression,
     SpawnPosition,
@@ -109,3 +110,16 @@ def handle_server_difficulty(
 ):
     server_difficulty = ServerDifficulty.from_raw_contents(raw)
     logger.log_info(f"Server difficulty: '{server_difficulty}'")
+
+
+def handle_player_list_item(
+    raw: bytes,
+    state: ClientState,
+    target: Target,
+    logger: FuzzLogger,
+    session: Session,
+    node: Fuzzable,
+    edge: Connection,
+):
+    player_list_item = PlayerListItem.from_raw_contents(raw)
+    logger.log_info(f"Player list item: '{player_list_item}'")

@@ -5,6 +5,7 @@ from fuzzing.protocol.callbacks import (
     handle_join_game,
     handle_keepalive,
     handle_login_success,
+    handle_player_list_item,
     handle_server_difficulty,
     handle_set_compression,
     handle_spawn_position,
@@ -26,6 +27,7 @@ def connect_protocol(session: Session) -> None:
     state.register_callback(0x23, handle_join_game)
     state.register_callback(0x46, handle_spawn_position)
     state.register_callback(0x0D, handle_server_difficulty)
+    state.register_callback(0x2E, handle_player_list_item)
 
     # Login Sequence: https://c4k3.github.io/wiki.vg/Protocol_FAQ.html#What.27s_the_normal_login_sequence_for_a_client.3F
     session.connect(HANDSHAKE_LOGIN, callback=state.reset())

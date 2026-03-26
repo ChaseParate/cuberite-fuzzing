@@ -264,3 +264,28 @@ class ServerDifficulty:
         assert len(raw) == 0, "from_raw_contents should parse the entire packet"
 
         return cls(difficulty=difficulty)
+
+
+@dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
+class PlayerListItem:
+    # https://c4k3.github.io/wiki.vg/Protocol.html#Player_List_Item
+    # Also known as "player_info" in Minebase.
+
+    action: int
+
+    @classmethod
+    def from_bytes(cls, raw: bytes) -> tuple[Self | None, bytes]:
+        packet, rest = read_compressed_packet(raw, 0x2E)
+        if packet is None:
+            return (None, rest)
+
+        return (cls.from_raw_contents(raw), rest)
+
+    @classmethod
+    def from_raw_contents(cls, raw: bytes) -> Self:
+        action, raw = VarInt.read(raw)
+
+        # I can't be assed to parse this packet. It doesn't contain anything relevant to the fuzzer as far as I can tell.
+        # assert len(raw) == 0, "from_raw_contents should parse the entire packet"
+
+        return cls(action=action)
