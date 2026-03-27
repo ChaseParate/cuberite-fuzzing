@@ -18,6 +18,7 @@ def fuzz(port: int, address: str):
         target=Target(
             connection=TCPSocketConnection(address, port),
             monitors=[MinecraftServer(["make", "run-cuberite"], address, port, state)],
+            max_recv_bytes=2**20,
         ),
         receive_data_after_each_request=False,
     )
