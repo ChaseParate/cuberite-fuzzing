@@ -6,6 +6,7 @@ from fuzzing.protocol.packets.clientbound import (
     JoinGame,
     LoginSuccess,
     PlayerListItem,
+    PlayerPositionAndLook,
     ServerDifficulty,
     SetCompression,
     SpawnPosition,
@@ -126,3 +127,18 @@ def handle_player_list_item(
 ):
     player_list_item = PlayerListItem.from_raw_contents(raw)
     logger.log_info(f"Player list item: '{player_list_item}'")
+
+
+def handle_player_position_and_look(
+    raw: bytes,
+    state: ClientState,
+    target: Target,
+    logger: FuzzLogger,
+    session: Session,
+    node: Fuzzable,
+    edge: Connection,
+):
+    player_position_and_look = PlayerPositionAndLook.from_raw_contents(raw)
+    logger.log_info(f"Player position and look: '{player_position_and_look}'")
+
+    state.login_teleport_id = player_position_and_look.teleport_id

@@ -116,6 +116,26 @@ def read_boolean(raw: bytes) -> tuple[bool, bytes]:
     return (bool(boolean), rest)
 
 
+type FloatSize = Literal[4, 8]
+
+
+def _get_float_size_format(size: FloatSize) -> str:
+    match size:
+        case 4:
+            return "f"
+        case 8:
+            return "d"
+        case _:
+            raise ValueError("Invalid float size")
+
+
+def read_float(raw: bytes, size: FloatSize) -> tuple[float, bytes]:
+    size_format = _get_float_size_format(size)
+
+    float_bytes, rest = raw[:size], raw[size:]
+    return (struct.unpack(f"<{size_format}", float_bytes)[0], rest)
+
+
 @dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
 class SetCompression:
     # https://minecraft.wiki/w/Java_Edition_protocol/Packets#Set_Compression
@@ -269,7 +289,7 @@ class ServerDifficulty:
 @dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
 class PlayerListItem:
     # https://c4k3.github.io/wiki.vg/Protocol.html#Player_List_Item
-    # Also known as "player_info" in Minebase.
+    # Also known as "packet_player_info" in Minebase.
 
     action: int
 
@@ -289,3 +309,47 @@ class PlayerListItem:
         # assert len(raw) == 0, "from_raw_contents should parse the entire packet"
 
         return cls(action=action)
+
+
+@dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
+class PlayerPositionAndLook:
+    # https://c4k3.github.io/wiki.vg/Protocol.html#Player_Position_And_Look_.28clientbound.29
+    # Also known as "packet_position" in Minebase.
+
+    x: float
+    y: float
+    z: float
+    yaw: float
+    pitch: float
+    flags: int
+    teleport_id: int
+
+    @classmethod
+    def from_bytes(cls, raw: bytes) -> tuple[Self | None, bytes]:
+        packet, rest = read_compressed_packet(raw, 0x2F)
+        if packet is None:
+            return (None, rest)
+
+        return (cls.from_raw_contents(raw), rest)
+
+    @classmethod
+    def from_raw_contents(cls, raw: bytes) -> Self:
+        x, raw = read_float(raw, 8)
+        y, raw = read_float(raw, 8)
+        z, raw = read_float(raw, 8)
+        yaw, raw = read_float(raw, 4)
+        pitch, raw = read_float(raw, 4)
+        flags, raw = read_integer(raw, 1, False)
+        teleport_id, raw = VarInt.read(raw)
+
+        assert len(raw) == 0, "from_raw_contents should parse the entire packet"
+
+        return cls(
+            x=x,
+            y=y,
+            z=z,
+            yaw=yaw,
+            pitch=pitch,
+            flags=flags,
+            teleport_id=teleport_id,
+        )

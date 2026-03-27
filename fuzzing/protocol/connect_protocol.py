@@ -6,6 +6,7 @@ from fuzzing.protocol.callbacks import (
     handle_keepalive,
     handle_login_success,
     handle_player_list_item,
+    handle_player_position_and_look,
     handle_server_difficulty,
     handle_set_compression,
     handle_spawn_position,
@@ -31,11 +32,11 @@ def connect_protocol(session: Session) -> None:
     state.register_callback(0x46, handle_spawn_position)
     state.register_callback(0x0D, handle_server_difficulty)
     state.register_callback(0x2E, handle_player_list_item)
+    state.register_callback(0x2F, handle_player_position_and_look)
 
     # Login Sequence: https://c4k3.github.io/wiki.vg/Protocol_FAQ.html#What.27s_the_normal_login_sequence_for_a_client.3F
     session.connect(HANDSHAKE_LOGIN, callback=state.reset())
     session.connect(HANDSHAKE_LOGIN, LOGIN_START)
-
     client_settings_packet = create_client_settings_packet(state)
     session.connect(LOGIN_START, client_settings_packet, state)
     session.connect(client_settings_packet, HANDSHAKE_ANY, state)  # TEMP

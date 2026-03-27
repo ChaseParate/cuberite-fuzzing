@@ -24,6 +24,8 @@ class ClientState:
     compression_threshold: int | None = None
     disconnect_okay: bool = False
 
+    login_teleport_id: int | None = None
+
     def register_callback(self, id: int, callback: Callback):
         self._callbacks[id] = callback
 
