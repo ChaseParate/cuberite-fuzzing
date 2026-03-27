@@ -6,7 +6,7 @@ from fuzzing.protocol.state import ClientState
 
 
 def create_teleport_confirm_packet(state: ClientState) -> Request:
-    # https://c4k3.github.io/wiki.vg/Protocol.html#Client_Settings
+    # https://c4k3.github.io/wiki.vg/Protocol.html#Teleport_Confirm
 
     return create_packet(
         "Teleport Confirm",
