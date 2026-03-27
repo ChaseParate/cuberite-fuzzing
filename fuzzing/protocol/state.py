@@ -1,7 +1,4 @@
-import random
-import string
-import struct
-from typing import Callable, Self
+from typing import Callable, Iterable
 
 from boofuzz import (
     Fuzzable,
@@ -13,13 +10,11 @@ from boofuzz.sessions.connection import Connection
 
 from fuzzing.protocol.packets.clientbound import PlayerPositionAndLook, RawPacket
 
+type ClientStatePacketCallback = Callable[
+    [bytes, ClientState, Target, FuzzLogger, Session, Fuzzable, Connection], None
+]
 
-def _generate_username(*, prefix: str = "Boo_", length: int = 8) -> str:
-    return prefix + "".join(
-        random.choices(
-            string.ascii_letters + string.digits, k=max(length - len(prefix), 0)
-        )
-    )
+type ClientStatePreSendCallback = Callable[[ClientState, Session], None]
 
 
 class ClientState:
@@ -29,24 +24,26 @@ class ClientState:
     and discard everything else.
     """
 
-    Callback = Callable[
-        [bytes, Self, Target, FuzzLogger, Session, Fuzzable, Connection], None
-    ]
-
     __name__ = "handle_state"
 
-    _callbacks: dict[int, Callback] = {}
+    _packet_callbacks: dict[int, ClientStatePacketCallback] = {}
+    _pre_send_callbacks: list[ClientStatePreSendCallback] = []
 
     compression_threshold: int | None = None
     disconnect_okay: bool = False
 
     login_player_position_and_look: PlayerPositionAndLook | None = None
 
-    def register_callback(self, id: int, callback: Callback):
-        self._callbacks[id] = callback
+    def register_packet_callback(self, id: int, callback: ClientStatePacketCallback):
+        self._packet_callbacks[id] = callback
 
-    def unregister_callback(self, id: int):
-        self._callbacks.pop(id, None)
+    def unregister_packet_callback(self, id: int):
+        self._packet_callbacks.pop(id, None)
+
+    def register_pre_send_callbacks(
+        self, callbacks: Iterable[ClientStatePreSendCallback]
+    ):
+        self._pre_send_callbacks.extend(callbacks)
 
     def reset(self) -> Callable:
         def reset_state(
@@ -66,55 +63,9 @@ class ClientState:
 
         return reset_state
 
-    def on_pre_send(self, session: Session) -> None:  # TODO: Fix return type
-        def find_node(name: str):
-            return next(
-                (node for node in session.nodes.values() if node.name == name),
-                None,
-            )
-
-        def reinterpret_double_float_to_int(f: float) -> int:
-            return struct.unpack("<Q", struct.pack("<d", f))[0]
-
-        # Hack: Update the default username to avoid issues with the player "already being logged in" (likely due to server not cleaning up the user in time for the next test)
-        login_start_node = find_node("Login Start")
-        if login_start_node is not None:
-            login_start_node.names[
-                "Login Start.length.login_start_data.name.name_raw"
-            ]._default_value = _generate_username()
-
-        # Another hack: Inject the logged in player position and look data into the relevant packets that require it.
-        if self.login_player_position_and_look is not None:
-            teleport_confirm_node = find_node("Teleport Confirm")
-            if teleport_confirm_node is not None:
-                teleport_confirm_node.names[
-                    "Teleport Confirm.length.Teleport ID"
-                ]._default_value = self.login_player_position_and_look.teleport_id
-
-            player_position_and_look_node = find_node("Player Position And Look")
-            if player_position_and_look_node is not None:
-                player_position_and_look_node.names[
-                    "Player Position And Look.length.Data.x"
-                ]._default_value = reinterpret_double_float_to_int(
-                    self.login_player_position_and_look.x
-                )
-                player_position_and_look_node.names[
-                    "Player Position And Look.length.Data.y"
-                ]._default_value = reinterpret_double_float_to_int(
-                    self.login_player_position_and_look.y
-                )
-                player_position_and_look_node.names[
-                    "Player Position And Look.length.Data.z"
-                ]._default_value = reinterpret_double_float_to_int(
-                    self.login_player_position_and_look.z
-                )
-                player_position_and_look_node.names[
-                    "Player Position And Look.length.Data.yaw"
-                ]._default_value = self.login_player_position_and_look.yaw
-                player_position_and_look_node.names[
-                    "Player Position And Look.length.Data.pitch"
-                ]._default_value = self.login_player_position_and_look.pitch
-                # player_position_and_look_node.names["Player Position And Look.length.Data.on_ground"]._default_value = ???
+    def on_pre_send(self, session: Session):
+        for callback in self._pre_send_callbacks:
+            callback(self, session)
 
     def __call__(
         self,
@@ -133,7 +84,7 @@ class ClientState:
                 if len(data) != 0:
                     fuzz_data_logger.log_error("received incomplete packet")
                 break
-            callback = self._callbacks.get(packet.id)
+            callback = self._packet_callbacks.get(packet.id)
             if callback is not None:
                 callback(
                     packet.contents, self, target, fuzz_data_logger, session, node, edge
