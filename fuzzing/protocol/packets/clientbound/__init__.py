@@ -1,8 +1,10 @@
 import dataclasses
+import struct
 import zlib
-from typing import Callable, Self
+from typing import Callable, Literal, Self
 
 from fuzzing.models.varint import VarInt
+from fuzzing.models.vectors import Position
 
 
 def _split_next_packet(raw: bytes) -> tuple[bytes | None, bytes]:
@@ -81,6 +83,59 @@ def read_string(raw: bytes) -> tuple[str, bytes]:
     return (raw[:length].decode("utf-8"), raw[length:])
 
 
+type IntegerSize = Literal[1, 2, 4, 8]
+
+
+def _get_integer_size_format(size: IntegerSize) -> str:
+    match size:
+        case 1:
+            return "b"
+        case 2:
+            return "h"
+        case 4:
+            return "i"
+        case 8:
+            return "q"
+        case _:
+            raise ValueError("Invalid integer size")
+
+
+def read_integer(raw: bytes, size: IntegerSize, signed: bool) -> tuple[int, bytes]:
+    size_format = _get_integer_size_format(size)
+    size_format = size_format.upper() if signed else size_format.lower()
+
+    int_bytes, rest = raw[:size], raw[size:]
+    return (struct.unpack(f"<{size_format}", int_bytes)[0], rest)
+
+
+def read_boolean(raw: bytes) -> tuple[bool, bytes]:
+    boolean, rest = read_integer(raw, 1, False)
+    if boolean not in (0, 1):
+        raise ValueError("Invalid boolean")
+
+    return (bool(boolean), rest)
+
+
+type FloatSize = Literal[4, 8]
+
+
+def _get_float_size_format(size: FloatSize) -> str:
+    match size:
+        case 4:
+            return "f"
+        case 8:
+            return "d"
+        case _:
+            raise ValueError("Invalid float size")
+
+
+def read_float(raw: bytes, size: FloatSize) -> tuple[float, bytes]:
+    size_format = _get_float_size_format(size)
+
+    float_bytes, rest = raw[:size], raw[size:]
+    return (struct.unpack(f"<{size_format}", float_bytes)[0], rest)
+
+
 @dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
 class SetCompression:
     # https://minecraft.wiki/w/Java_Edition_protocol/Packets#Set_Compression
@@ -121,9 +176,10 @@ class Disconnect:
 
 @dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
 class LoginSuccess:
-    # https://minecraft.wiki/w/Java_Edition_protocol/Packets#Login_Success
+    # https://c4k3.github.io/wiki.vg/Protocol.html#Login_Success
 
-    # game_profile: GameProfile
+    uuid: str
+    username: str
 
     @classmethod
     def from_bytes(cls, raw: bytes) -> tuple[Self | None, bytes]:
@@ -134,5 +190,166 @@ class LoginSuccess:
 
     @classmethod
     def from_raw_contents(cls, raw: bytes) -> Self:
-        # TODO: Parse game_profile, if you _really_ want. I don't think it's necessary.
-        return cls()
+        uuid, raw = read_string(raw)
+        username, raw = read_string(raw)
+
+        assert len(raw) == 0, "from_raw_contents should parse the entire packet"
+
+        return cls(uuid=uuid, username=username)
+
+
+@dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
+class JoinGame:
+    # https://c4k3.github.io/wiki.vg/Protocol.html#Join_Game
+
+    entity_id: int
+    gamemode: int
+    dimension: int
+    difficulty: int
+    max_players: int
+    level_type: str
+    reduced_debug_info: bool
+
+    @classmethod
+    def from_bytes(cls, raw: bytes) -> tuple[Self | None, bytes]:
+        packet, rest = read_compressed_packet(raw, 0x23)
+        if packet is None:
+            return (None, rest)
+        return (cls.from_raw_contents(packet), rest)
+
+    @classmethod
+    def from_raw_contents(cls, raw: bytes) -> Self:
+        entity_id, raw = read_integer(raw, 4, True)
+        gamemode, raw = read_integer(raw, 1, False)
+        dimension, raw = read_integer(raw, 4, True)
+        difficulty, raw = read_integer(raw, 1, False)
+        max_players, raw = read_integer(raw, 1, False)
+        level_type, raw = read_string(raw)
+        reduced_debug_info, raw = read_boolean(raw)
+
+        assert len(raw) == 0, "from_raw_contents should parse the entire packet"
+
+        return cls(
+            entity_id=entity_id,
+            gamemode=gamemode,
+            dimension=dimension,
+            difficulty=difficulty,
+            max_players=max_players,
+            level_type=level_type,
+            reduced_debug_info=reduced_debug_info,
+        )
+
+
+@dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
+class SpawnPosition:
+    # https://c4k3.github.io/wiki.vg/Protocol.html#Spawn_Position
+
+    position: Position
+
+    @classmethod
+    def from_bytes(cls, raw: bytes) -> tuple[Self | None, bytes]:
+        packet, rest = read_compressed_packet(raw, 0x46)
+        if packet is None:
+            return (None, rest)
+
+        return (cls.from_raw_contents(raw), rest)
+
+    @classmethod
+    def from_raw_contents(cls, raw: bytes) -> Self:
+        position, raw = Position.read(raw)
+
+        assert len(raw) == 0, "from_raw_contents should parse the entire packet"
+
+        return cls(position=position)
+
+
+@dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
+class ServerDifficulty:
+    # https://c4k3.github.io/wiki.vg/Protocol.html#Server_Difficulty
+
+    difficulty: int
+
+    @classmethod
+    def from_bytes(cls, raw: bytes) -> tuple[Self | None, bytes]:
+        packet, rest = read_compressed_packet(raw, 0x46)
+        if packet is None:
+            return (None, rest)
+
+        return (cls.from_raw_contents(raw), rest)
+
+    @classmethod
+    def from_raw_contents(cls, raw: bytes) -> Self:
+        difficulty, raw = read_integer(raw, 1, False)
+
+        assert len(raw) == 0, "from_raw_contents should parse the entire packet"
+
+        return cls(difficulty=difficulty)
+
+
+@dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
+class PlayerListItem:
+    # https://c4k3.github.io/wiki.vg/Protocol.html#Player_List_Item
+    # Also known as "packet_player_info" in Minebase.
+
+    action: int
+
+    @classmethod
+    def from_bytes(cls, raw: bytes) -> tuple[Self | None, bytes]:
+        packet, rest = read_compressed_packet(raw, 0x2E)
+        if packet is None:
+            return (None, rest)
+
+        return (cls.from_raw_contents(raw), rest)
+
+    @classmethod
+    def from_raw_contents(cls, raw: bytes) -> Self:
+        action, raw = VarInt.read(raw)
+
+        # I can't be assed to parse this packet. It doesn't contain anything relevant to the fuzzer as far as I can tell.
+        # assert len(raw) == 0, "from_raw_contents should parse the entire packet"
+
+        return cls(action=action)
+
+
+@dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
+class PlayerPositionAndLook:
+    # https://c4k3.github.io/wiki.vg/Protocol.html#Player_Position_And_Look_.28clientbound.29
+    # Also known as "packet_position" in Minebase.
+
+    x: float
+    y: float
+    z: float
+    yaw: float
+    pitch: float
+    flags: int
+    teleport_id: int
+
+    @classmethod
+    def from_bytes(cls, raw: bytes) -> tuple[Self | None, bytes]:
+        packet, rest = read_compressed_packet(raw, 0x2F)
+        if packet is None:
+            return (None, rest)
+
+        return (cls.from_raw_contents(raw), rest)
+
+    @classmethod
+    def from_raw_contents(cls, raw: bytes) -> Self:
+        x, raw = read_float(raw, 8)
+        y, raw = read_float(raw, 8)
+        z, raw = read_float(raw, 8)
+        yaw, raw = read_float(raw, 4)
+        pitch, raw = read_float(raw, 4)
+        flags, raw = read_integer(raw, 1, False)
+        teleport_id, raw = VarInt.read(raw)
+
+        assert len(raw) == 0, "from_raw_contents should parse the entire packet"
+
+        return cls(
+            x=x,
+            y=y,
+            z=z,
+            yaw=yaw,
+            pitch=pitch,
+            flags=flags,
+            teleport_id=teleport_id,
+        )

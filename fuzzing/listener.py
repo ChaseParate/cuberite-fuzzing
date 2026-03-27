@@ -9,23 +9,31 @@ from typing import IO, override
 from boofuzz.monitors import BaseMonitor
 from boofuzz.sessions import Session
 
+from fuzzing.protocol.state import ClientState
+
 START_TIMEOUT = 60.0
 START_INTERVAL = 1.0
 
 
 class MinecraftServer(BaseMonitor):
     start_command: list[str]
+    address: str
+    port: int
+    state: ClientState
+
     full_log: Queue[str]
     current_log: str
     return_code: int
     process: subprocess.Popen | None
-    address: str
-    port: int
 
-    def __init__(self, start_command: list[str], address: str, port: int):
+    def __init__(
+        self, start_command: list[str], address: str, port: int, state: ClientState
+    ):
         self.start_command = start_command
         self.address = address
         self.port = port
+        self.state = state
+
         self.full_log = Queue()
         self.current_log = ""
         self.return_code = 0
@@ -82,6 +90,10 @@ class MinecraftServer(BaseMonitor):
         if session:
             index = session.total_mutant_index
         print(f"pre_send test {index}")
+
+        if session:
+            self.state.on_pre_send(session)
+
         if not self.process:
             self.start_target()
 
