@@ -1,4 +1,6 @@
+import random
 import socket
+import string
 import subprocess
 import time
 from contextlib import closing
@@ -11,6 +13,14 @@ from boofuzz.sessions import Session
 
 START_TIMEOUT = 60.0
 START_INTERVAL = 1.0
+
+
+def generate_username(*, prefix: str = "Boo_", length: int = 8) -> str:
+    return prefix + "".join(
+        random.choices(
+            string.ascii_letters + string.digits, k=max(length - len(prefix), 0)
+        )
+    )
 
 
 class MinecraftServer(BaseMonitor):
@@ -82,6 +92,19 @@ class MinecraftServer(BaseMonitor):
         if session:
             index = session.total_mutant_index
         print(f"pre_send test {index}")
+
+        # Hack: Update the default username to avoid issues with the player "already being logged in" (likely due to server not cleaning up the user in time for the next test)
+        if session:
+            login_start_node = next(
+                (node for node in session.nodes.values() if node.name == "Login Start"),
+                None,
+            )
+            if login_start_node is not None:
+                username_fuzzable = login_start_node.names[
+                    "Login Start.length.login_start_data.name.name_raw"
+                ]
+                username_fuzzable._default_value = generate_username()
+
         if not self.process:
             self.start_target()
 
