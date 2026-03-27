@@ -58,6 +58,9 @@ def handle_disconnect(
     disconnect = Disconnect.from_raw_contents(raw)
     logger.log_info(f"Disconnected: '{disconnect.reason}'")
 
+    if not state.disconnect_okay:
+        logger.log_fail("Received a disconnect packet when one wasn't expected")
+
 
 def handle_set_compression(
     raw: bytes,

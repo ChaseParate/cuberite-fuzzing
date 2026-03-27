@@ -19,12 +19,10 @@ class ClientState:
 
     __name__ = "handle_state"
 
-    _callbacks: dict[int, Callback]
-    compression_threshold: int | None = None
+    _callbacks: dict[int, Callback] = {}
 
-    def __init__(self):
-        self._callbacks = {}
-        self.compression_threshold = None
+    compression_threshold: int | None = None
+    disconnect_okay: bool = False
 
     def register_callback(self, id: int, callback: Callback):
         self._callbacks[id] = callback
