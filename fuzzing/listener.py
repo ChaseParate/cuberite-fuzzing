@@ -92,7 +92,7 @@ class MinecraftServer(BaseMonitor):
         print(f"pre_send test {index}")
 
         if session:
-            self.state.pre_send_callback(session)
+            self.state.on_pre_send(session)
 
         if not self.process:
             self.start_target()

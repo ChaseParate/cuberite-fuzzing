@@ -19,6 +19,9 @@ from fuzzing.protocol.packets.serverbound.handshake import (
     HANDSHAKE_LOGIN,
 )
 from fuzzing.protocol.packets.serverbound.login_start import LOGIN_START
+from fuzzing.protocol.packets.serverbound.player_position_and_look import (
+    create_player_position_and_look_packet,
+)
 from fuzzing.protocol.packets.serverbound.teleport_confirm import (
     create_teleport_confirm_packet,
 )
@@ -42,6 +45,8 @@ def connect_protocol(session: Session, state: ClientState) -> None:
 
     client_settings_packet = create_client_settings_packet(state)
     teleport_confirm_packet = create_teleport_confirm_packet(state)
+    player_position_and_look_packet = create_player_position_and_look_packet(state)
     session.connect(LOGIN_START, client_settings_packet, state)
     session.connect(client_settings_packet, teleport_confirm_packet, state)
-    session.connect(teleport_confirm_packet, HANDSHAKE_ANY, state)  # TEMP
+    session.connect(teleport_confirm_packet, player_position_and_look_packet, state)
+    session.connect(player_position_and_look_packet, HANDSHAKE_ANY, state)  # TEMP

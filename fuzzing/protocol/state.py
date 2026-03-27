@@ -1,8 +1,14 @@
 import random
 import string
+import struct
 from typing import Callable, Self
 
-from boofuzz import Fuzzable, FuzzLogger, Session, Target
+from boofuzz import (
+    Fuzzable,
+    FuzzLogger,
+    Session,
+    Target,
+)
 from boofuzz.sessions.connection import Connection
 
 from fuzzing.protocol.packets.clientbound import PlayerPositionAndLook, RawPacket
@@ -60,35 +66,55 @@ class ClientState:
 
         return reset_state
 
-    def pre_send_callback(self, session: Session) -> None:
-        # Hack: Update the default username to avoid issues with the player "already being logged in" (likely due to server not cleaning up the user in time for the next test)
-        login_start_node = next(
-            (node for node in session.nodes.values() if node.name == "Login Start"),
-            None,
-        )
-        if login_start_node is not None:
-            username_fuzzable = login_start_node.names[
-                "Login Start.length.login_start_data.name.name_raw"
-            ]
-            username_fuzzable._default_value = _generate_username()
-
-        # Kind of a hack---inject the logged in player position and look data into the relevant packets that require it.
-        if self.login_player_position_and_look is not None:
-            teleport_confirm_packet = next(
-                (
-                    node
-                    for node in session.nodes.values()
-                    if node.name == "Teleport Confirm"
-                ),
+    def on_pre_send(self, session: Session) -> None:  # TODO: Fix return type
+        def find_node(name: str):
+            return next(
+                (node for node in session.nodes.values() if node.name == name),
                 None,
             )
-            if teleport_confirm_packet is not None:
-                teleport_id_fuzzable = teleport_confirm_packet.names[
+
+        def reinterpret_double_float_to_int(f: float) -> int:
+            return struct.unpack("<Q", struct.pack("<d", f))[0]
+
+        # Hack: Update the default username to avoid issues with the player "already being logged in" (likely due to server not cleaning up the user in time for the next test)
+        login_start_node = find_node("Login Start")
+        if login_start_node is not None:
+            login_start_node.names[
+                "Login Start.length.login_start_data.name.name_raw"
+            ]._default_value = _generate_username()
+
+        # Another hack: Inject the logged in player position and look data into the relevant packets that require it.
+        if self.login_player_position_and_look is not None:
+            teleport_confirm_node = find_node("Teleport Confirm")
+            if teleport_confirm_node is not None:
+                teleport_confirm_node.names[
                     "Teleport Confirm.length.Teleport ID"
-                ]
-                teleport_id_fuzzable._default_value = (
-                    self.login_player_position_and_look.teleport_id
+                ]._default_value = self.login_player_position_and_look.teleport_id
+
+            player_position_and_look_node = find_node("Player Position And Look")
+            if player_position_and_look_node is not None:
+                player_position_and_look_node.names[
+                    "Player Position And Look.length.Data.x"
+                ]._default_value = reinterpret_double_float_to_int(
+                    self.login_player_position_and_look.x
                 )
+                player_position_and_look_node.names[
+                    "Player Position And Look.length.Data.y"
+                ]._default_value = reinterpret_double_float_to_int(
+                    self.login_player_position_and_look.y
+                )
+                player_position_and_look_node.names[
+                    "Player Position And Look.length.Data.z"
+                ]._default_value = reinterpret_double_float_to_int(
+                    self.login_player_position_and_look.z
+                )
+                player_position_and_look_node.names[
+                    "Player Position And Look.length.Data.yaw"
+                ]._default_value = self.login_player_position_and_look.yaw
+                player_position_and_look_node.names[
+                    "Player Position And Look.length.Data.pitch"
+                ]._default_value = self.login_player_position_and_look.pitch
+                # player_position_and_look_node.names["Player Position And Look.length.Data.on_ground"]._default_value = ???
 
     def __call__(
         self,
