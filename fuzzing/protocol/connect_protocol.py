@@ -19,11 +19,13 @@ from fuzzing.protocol.packets.serverbound.handshake import (
     HANDSHAKE_LOGIN,
 )
 from fuzzing.protocol.packets.serverbound.login_start import LOGIN_START
+from fuzzing.protocol.packets.serverbound.teleport_confirm import (
+    create_teleport_confirm_packet,
+)
 from fuzzing.protocol.state import ClientState
 
 
-def connect_protocol(session: Session) -> None:
-    state = ClientState()
+def connect_protocol(session: Session, state: ClientState) -> None:
     state.register_callback(0x1F, handle_keepalive)
     state.register_callback(0x02, handle_login_success)
     state.register_callback(0x03, handle_set_compression)
@@ -37,6 +39,9 @@ def connect_protocol(session: Session) -> None:
     # Login Sequence: https://c4k3.github.io/wiki.vg/Protocol_FAQ.html#What.27s_the_normal_login_sequence_for_a_client.3F
     session.connect(HANDSHAKE_LOGIN, callback=state.reset())
     session.connect(HANDSHAKE_LOGIN, LOGIN_START)
+
     client_settings_packet = create_client_settings_packet(state)
+    teleport_confirm_packet = create_teleport_confirm_packet(state)
     session.connect(LOGIN_START, client_settings_packet, state)
-    session.connect(client_settings_packet, HANDSHAKE_ANY, state)  # TEMP
+    session.connect(client_settings_packet, teleport_confirm_packet, state)
+    session.connect(teleport_confirm_packet, HANDSHAKE_ANY, state)  # TEMP

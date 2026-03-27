@@ -141,4 +141,4 @@ def handle_player_position_and_look(
     player_position_and_look = PlayerPositionAndLook.from_raw_contents(raw)
     logger.log_info(f"Player position and look: '{player_position_and_look}'")
 
-    state.login_teleport_id = player_position_and_look.teleport_id
+    state.login_player_position_and_look = player_position_and_look

@@ -1,6 +1,4 @@
-import random
 import socket
-import string
 import subprocess
 import time
 from contextlib import closing
@@ -11,31 +9,31 @@ from typing import IO, override
 from boofuzz.monitors import BaseMonitor
 from boofuzz.sessions import Session
 
+from fuzzing.protocol.state import ClientState
+
 START_TIMEOUT = 60.0
 START_INTERVAL = 1.0
 
 
-def generate_username(*, prefix: str = "Boo_", length: int = 8) -> str:
-    return prefix + "".join(
-        random.choices(
-            string.ascii_letters + string.digits, k=max(length - len(prefix), 0)
-        )
-    )
-
-
 class MinecraftServer(BaseMonitor):
     start_command: list[str]
+    address: str
+    port: int
+    state: ClientState
+
     full_log: Queue[str]
     current_log: str
     return_code: int
     process: subprocess.Popen | None
-    address: str
-    port: int
 
-    def __init__(self, start_command: list[str], address: str, port: int):
+    def __init__(
+        self, start_command: list[str], address: str, port: int, state: ClientState
+    ):
         self.start_command = start_command
         self.address = address
         self.port = port
+        self.state = state
+
         self.full_log = Queue()
         self.current_log = ""
         self.return_code = 0
@@ -93,17 +91,8 @@ class MinecraftServer(BaseMonitor):
             index = session.total_mutant_index
         print(f"pre_send test {index}")
 
-        # Hack: Update the default username to avoid issues with the player "already being logged in" (likely due to server not cleaning up the user in time for the next test)
         if session:
-            login_start_node = next(
-                (node for node in session.nodes.values() if node.name == "Login Start"),
-                None,
-            )
-            if login_start_node is not None:
-                username_fuzzable = login_start_node.names[
-                    "Login Start.length.login_start_data.name.name_raw"
-                ]
-                username_fuzzable._default_value = generate_username()
+            self.state.pre_send_callback(session)
 
         if not self.process:
             self.start_target()

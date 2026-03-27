@@ -6,7 +6,7 @@ from fuzzing.protocol.state import ClientState
 
 
 def create_client_settings_packet(
-    state: ClientState, *, fields_fuzzable: bool = True, enforce_max_length=True
+    state: ClientState, *, fields_fuzzable: bool = True, enforce_max_length: bool = True
 ) -> Request:
     # https://c4k3.github.io/wiki.vg/Protocol.html#Client_Settings
 
