@@ -7,7 +7,7 @@ from fuzzing.protocol.state import ClientState
 def create_player_position_and_look_packet(
     state: ClientState,
     *,
-    fields_fuzzable: bool,
+    fields_fuzzable: bool = True,
     subname: str | None = None,
 ) -> Request:
     # https://c4k3.github.io/wiki.vg/Protocol.html#Player_Position_And_Look_.28serverbound.29

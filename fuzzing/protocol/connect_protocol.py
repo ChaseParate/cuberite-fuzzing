@@ -15,6 +15,7 @@ from fuzzing.protocol.callbacks.pre_send import (
     update_default_username,
     update_login_player_position_and_look,
 )
+from fuzzing.protocol.packets.serverbound.chat_message import create_chat_message_packet
 from fuzzing.protocol.packets.serverbound.client_settings import (
     create_client_settings_packet,
 )
@@ -46,7 +47,9 @@ def connect_login_sequence(session: Session, state: ClientState) -> Request:
     teleport_confirm_packet = create_teleport_confirm_packet(state)
     # The values in this packet will be hot-swapped with the correct value at runtime to fulfill the login sequence.
     player_position_and_look_packet = create_player_position_and_look_packet(
-        state, fields_fuzzable=False, subname="Login"
+        state,
+        fields_fuzzable=False,
+        subname="Login",
     )
     client_status_packet = create_client_status_packet(state)
 
@@ -80,7 +83,8 @@ def connect_protocol(session: Session, state: ClientState) -> None:
     final_login_packet = connect_login_sequence(session, state)
 
     packet_sequences: list[list[Request]] = [
-        [create_player_position_and_look_packet(state, fields_fuzzable=True)],
+        [create_player_position_and_look_packet(state)],
+        [create_chat_message_packet(state)],
     ]
 
     for packet_sequence in packet_sequences:
