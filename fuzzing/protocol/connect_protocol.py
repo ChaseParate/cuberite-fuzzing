@@ -33,13 +33,17 @@ from fuzzing.protocol.packets.serverbound.teleport_confirm import (
 from fuzzing.protocol.state import ClientState
 
 
-def _connect_packets(session: Session, packets: list[Request]) -> None:
+def _connect_packets(
+    session: Session, state: ClientState, packets: list[Request]
+) -> None:
     for packet_1, packet_2 in zip(packets, packets[1:]):
-        session.connect(packet_1, packet_2)
+        session.connect(packet_1, packet_2, state)
 
 
 def connect_login_sequence(session: Session, state: ClientState) -> Request:
     # Login Sequence: https://c4k3.github.io/wiki.vg/Protocol_FAQ.html#What.27s_the_normal_login_sequence_for_a_client.3F
+
+    # TODO: Consider combining these packets into one request?
     session.connect(HANDSHAKE_LOGIN, callback=state.reset())
     session.connect(HANDSHAKE_LOGIN, LOGIN_START)
 
@@ -60,7 +64,7 @@ def connect_login_sequence(session: Session, state: ClientState) -> Request:
         player_position_and_look_packet,
         client_status_packet,
     ]
-    _connect_packets(session, login_sequence)
+    _connect_packets(session, state, login_sequence)
 
     return login_sequence[-1]
 
@@ -88,4 +92,4 @@ def connect_protocol(session: Session, state: ClientState) -> None:
     ]
 
     for packet_sequence in packet_sequences:
-        _connect_packets(session, [final_login_packet] + packet_sequence)
+        _connect_packets(session, state, [final_login_packet] + packet_sequence)
