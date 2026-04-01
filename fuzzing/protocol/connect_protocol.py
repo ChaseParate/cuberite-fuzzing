@@ -1,7 +1,8 @@
 from boofuzz import Request, Session
 
 from fuzzing.protocol.callbacks.packet import (
-    handle_disconnect,
+    handle_disconnect_login,
+    handle_disconnect_play,
     handle_join_game,
     handle_keepalive,
     handle_login_success,
@@ -73,7 +74,8 @@ def connect_protocol(session: Session, state: ClientState) -> None:
     state.register_packet_callback(0x1F, handle_keepalive)
     state.register_packet_callback(0x02, handle_login_success)
     state.register_packet_callback(0x03, handle_set_compression)
-    state.register_packet_callback(0x00, handle_disconnect)
+    state.register_packet_callback(0x00, handle_disconnect_login)
+    state.register_packet_callback(0x1A, handle_disconnect_play)
     state.register_packet_callback(0x23, handle_join_game)
     state.register_packet_callback(0x46, handle_spawn_position)
     state.register_packet_callback(0x0D, handle_server_difficulty)
