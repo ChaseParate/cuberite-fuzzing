@@ -2,7 +2,8 @@ from boofuzz import Fuzzable, FuzzLogger, Session, Target
 from boofuzz.sessions.connection import Connection
 
 from fuzzing.protocol.packets.clientbound import (
-    Disconnect,
+    DisconnectLogin,
+    DisconnectPlay,
     JoinGame,
     LoginSuccess,
     PlayerListItem,
@@ -47,7 +48,7 @@ def handle_login_success(
     logger.log_info("Logged in successfully")
 
 
-def handle_disconnect(
+def handle_disconnect_login(
     raw: bytes,
     state: ClientState,
     target: Target,
@@ -56,8 +57,24 @@ def handle_disconnect(
     node: Fuzzable,
     edge: Connection,
 ):
-    disconnect = Disconnect.from_raw_contents(raw)
-    logger.log_info(f"Disconnected: '{disconnect.reason}'")
+    disconnect = DisconnectLogin.from_raw_contents(raw)
+    logger.log_info(f"Disconnected (login): '{disconnect.reason}'")
+
+    if not state.disconnect_okay:
+        logger.log_fail("Received a disconnect packet when one wasn't expected")
+
+
+def handle_disconnect_play(
+    raw: bytes,
+    state: ClientState,
+    target: Target,
+    logger: FuzzLogger,
+    session: Session,
+    node: Fuzzable,
+    edge: Connection,
+):
+    disconnect = DisconnectPlay.from_raw_contents(raw)
+    logger.log_info(f"Disconnected (play): '{disconnect.reason}'")
 
     if not state.disconnect_okay:
         logger.log_fail("Received a disconnect packet when one wasn't expected")

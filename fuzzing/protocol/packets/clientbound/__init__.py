@@ -156,7 +156,7 @@ class SetCompression:
 
 
 @dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
-class Disconnect:
+class DisconnectLogin:
     # https://minecraft.wiki/w/Java_Edition_protocol/Packets#Disconnect_(login)
     reason: str
 
@@ -353,3 +353,22 @@ class PlayerPositionAndLook:
             flags=flags,
             teleport_id=teleport_id,
         )
+
+
+@dataclasses.dataclass(eq=False, frozen=True, kw_only=True, slots=True)
+class DisconnectPlay:
+    # https://c4k3.github.io/wiki.vg/Protocol.html#Disconnect_.28play.29
+    reason: str
+
+    @classmethod
+    def from_bytes(cls, raw: bytes) -> tuple[Self | None, bytes]:
+        packet, rest = read_compressed_packet(raw, 0x1A)
+        if packet is None:
+            return (None, rest)
+        return (cls.from_raw_contents(packet), rest)
+
+    @classmethod
+    def from_raw_contents(cls, raw: bytes) -> Self:
+        reason, rest = read_string(raw)
+        assert len(rest) == 0, "from_raw_contents should parse the entire packet"
+        return cls(reason=reason)
