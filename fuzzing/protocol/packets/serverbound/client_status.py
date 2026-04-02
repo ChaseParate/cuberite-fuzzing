@@ -14,5 +14,5 @@ def create_client_status_packet(
         "Client Status",
         0x3,
         VarIntBlock("Action ID", fuzzable=fields_fuzzable),
-        state.compression_threshold,
+        state,
     )

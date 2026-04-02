@@ -1,4 +1,4 @@
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Literal, cast
 
 from boofuzz import (
     Fuzzable,
@@ -14,8 +14,8 @@ type ClientStatePacketCallback = Callable[
     [bytes, ClientState, Target, FuzzLogger, Session, Fuzzable, Connection], None
 ]
 
-type ClientStatePreSendCallback = Callable[[ClientState, Session], None]
-
+type ClientStatePreSendCallback = Callable[[ClientState, Session, FuzzLogger], None]
+type ServerState = Literal["Login", "Play"]
 
 class ClientState:
     """Client State + Callback Handler
@@ -26,19 +26,26 @@ class ClientState:
 
     __name__ = "handle_state"
 
-    _packet_callbacks: dict[int, ClientStatePacketCallback] = {}
+    _packet_callbacks: dict[ServerState, dict[int, ClientStatePacketCallback]] = {}
     _pre_send_callbacks: list[ClientStatePreSendCallback] = []
 
     compression_threshold: int | None = None
     disconnect_okay: bool = False
+    state: ServerState = "Login"
+
+    def __init__(self):
+        self._packet_callbacks = {
+            cast(ServerState, "Login"): dict[int, ClientStatePacketCallback](),
+            cast(ServerState, "Play"): dict[int, ClientStatePacketCallback](),
+        }
 
     login_player_position_and_look: PlayerPositionAndLook | None = None
 
-    def register_packet_callback(self, id: int, callback: ClientStatePacketCallback):
-        self._packet_callbacks[id] = callback
+    def register_packet_callback(self, state: ServerState, id: int, callback: ClientStatePacketCallback):
+        self._packet_callbacks[state][id] = callback
 
-    def unregister_packet_callback(self, id: int):
-        self._packet_callbacks.pop(id, None)
+    def unregister_packet_callback(self, state: ServerState, id: int):
+        self._packet_callbacks[state].pop(id, None)
 
     def register_pre_send_callbacks(
         self, callbacks: Iterable[ClientStatePreSendCallback]
@@ -60,12 +67,13 @@ class ClientState:
             self.compression_threshold = None
             self.disconnect_okay = False
             self.login_player_position_and_look = None
+            self.state = "Login"
 
         return reset_state
 
-    def on_pre_send(self, session: Session):
+    def on_pre_send(self, session: Session, fuzz_data_logger):
         for callback in self._pre_send_callbacks:
-            callback(self, session)
+            callback(self, session, fuzz_data_logger)
 
     def __call__(
         self,
@@ -79,17 +87,22 @@ class ClientState:
     ):
         data = target.recv()
         while len(data) > 0:
-            packet, data = RawPacket.read(data, self.compression_threshold)
+            packet, data = RawPacket.read(data, self.compression_threshold, self._packet_callbacks[self.state].keys())
             if packet is None:
                 if len(data) != 0:
-                    fuzz_data_logger.log_error("received incomplete packet")
+                    fuzz_data_logger.log_info("requesting more data")
+                    data += target.recv()
+                    fuzz_data_logger.log_info("requested more data")
+                    continue
                 break
-            callback = self._packet_callbacks.get(packet.id)
+            callback = self._packet_callbacks[self.state].get(packet.id)
             if callback is not None:
+                fuzz_data_logger.log_info(f"received packet ID {hex(packet.id)} of length {len(packet.contents)}")
                 callback(
                     packet.contents, self, target, fuzz_data_logger, session, node, edge
                 )
             else:
                 fuzz_data_logger.log_info(
-                    f"received unknown packet ID {hex(packet.id)}"
+                    f"received unknown packet ID {hex(packet.id)} of length {len(packet.contents)}"
                 )
+        self.on_pre_send(session, fuzz_data_logger)

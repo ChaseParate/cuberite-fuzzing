@@ -71,16 +71,16 @@ def connect_login_sequence(session: Session, state: ClientState) -> Request:
 
 
 def connect_protocol(session: Session, state: ClientState) -> None:
-    state.register_packet_callback(0x1F, handle_keepalive)
-    state.register_packet_callback(0x02, handle_login_success)
-    state.register_packet_callback(0x03, handle_set_compression)
-    state.register_packet_callback(0x00, handle_disconnect_login)
-    state.register_packet_callback(0x1A, handle_disconnect_play)
-    state.register_packet_callback(0x23, handle_join_game)
-    state.register_packet_callback(0x46, handle_spawn_position)
-    state.register_packet_callback(0x0D, handle_server_difficulty)
-    state.register_packet_callback(0x2E, handle_player_list_item)
-    state.register_packet_callback(0x2F, handle_player_position_and_look)
+    state.register_packet_callback("Play", 0x1F, handle_keepalive)
+    state.register_packet_callback("Login", 0x02, handle_login_success)
+    state.register_packet_callback("Login", 0x03, handle_set_compression)
+    state.register_packet_callback("Login", 0x00, handle_disconnect_login)
+    state.register_packet_callback("Play", 0x1A, handle_disconnect_play)
+    state.register_packet_callback("Play", 0x23, handle_join_game)
+    state.register_packet_callback("Play", 0x46, handle_spawn_position)
+    state.register_packet_callback("Play", 0x0D, handle_server_difficulty)
+    state.register_packet_callback("Play", 0x2E, handle_player_list_item)
+    state.register_packet_callback("Play", 0x2F, handle_player_position_and_look)
 
     state.register_pre_send_callbacks(
         (update_default_username, update_login_player_position_and_look)

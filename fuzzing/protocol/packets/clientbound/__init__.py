@@ -1,7 +1,7 @@
 import dataclasses
 import struct
 import zlib
-from typing import Callable, Literal, Self
+from typing import Callable, Iterable, Literal, Self
 
 from fuzzing.models.varint import VarInt
 from fuzzing.models.vectors import Position
@@ -11,11 +11,10 @@ def _split_next_packet(raw: bytes) -> tuple[bytes | None, bytes]:
     """
     Separates the first packet from the remaining data via the first packet's header.
     """
-    try:
-        length, rest = VarInt.read(raw)
-        return (rest[:length], rest[length:])
-    except IndexError:
+    length, rest = VarInt.read(raw)
+    if len(rest) < length:
         return (None, raw)
+    return (rest[:length], rest[length:])
 
 
 def _read_packet(
@@ -45,7 +44,7 @@ class RawPacket:
 
     @classmethod
     def read(
-        cls, raw: bytes, threshold: int | None = None
+        cls, raw: bytes, threshold: int | None = None, want: Iterable[int] | None = None
     ) -> tuple[Self | None, bytes]:
         """
         Reads any packet, returning the packet ID, the packet raw contents, and the remaining data.
@@ -53,12 +52,27 @@ class RawPacket:
         packet, rest = _split_next_packet(raw)
         if packet is None:
             return (None, raw)
+        
+        packet_id = -1
 
         if threshold is not None:
             data_length, packet = VarInt.read(packet)
-            packet = zlib.decompress(packet) if data_length > 0 else packet
+            if data_length == 0:
+                packet_id, packet = VarInt.read(packet)
+            else:
+                decompressor = zlib.decompressobj()
+                first = decompressor.decompress(packet, 5)
+                packet_id, _ = VarInt.read(first)
+                if want is not None:
+                    if packet_id in want:
+                        packet = decompressor.decompress(packet)
+                    else:
+                        packet = bytes([])
+                else:
+                    packet = decompressor.decompress(packet)
+        else:
+            packet_id, packet = VarInt.read(packet)
 
-        packet_id, packet = VarInt.read(packet)
         return (cls(packet_id, packet), rest)
 
 

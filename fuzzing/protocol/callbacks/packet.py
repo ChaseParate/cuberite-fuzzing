@@ -45,6 +45,7 @@ def handle_login_success(
 ):
     # TODO: might want to parse the contents here, doesn't really matter
     login_success = LoginSuccess.from_raw_contents(raw)
+    state.state = "Play"
     logger.log_info("Logged in successfully")
 
 

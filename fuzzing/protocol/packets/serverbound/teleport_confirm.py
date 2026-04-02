@@ -13,5 +13,5 @@ def create_teleport_confirm_packet(state: ClientState) -> Request:
         0x0,
         # This value will be hot-swapped with the correct value at runtime.
         VarIntBlock("Teleport ID", fuzzable=False),
-        state.compression_threshold,
+        state,
     )

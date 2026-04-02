@@ -8,6 +8,7 @@ from typing import IO, override
 
 from boofuzz.monitors import BaseMonitor
 from boofuzz.sessions import Session
+from boofuzz import FuzzLogger
 
 from fuzzing.protocol.state import ClientState
 
@@ -55,7 +56,8 @@ class MinecraftServer(BaseMonitor):
                 self.current_log += self.full_log.get_nowait()
                 lines += 1
         except Empty:
-            print(f"read {lines} output lines")
+            pass
+            # print(f"read {lines} output lines")
         if self.process is None:
             return False
         code = self.process.poll()
@@ -72,9 +74,9 @@ class MinecraftServer(BaseMonitor):
         index = "unknown"
         if session:
             index = session.total_mutant_index
-        print(f"post_send test {index}")
+        # print(f"post_send test {index}")
         res = self._post_send()
-        print("finished post_send")
+        # print("finished post_send")
         return res
 
     @override
@@ -83,16 +85,21 @@ class MinecraftServer(BaseMonitor):
 
     @override
     def pre_send(
-        self, target=None, fuzz_data_logger=None, session: Session | None = None
+        self, target=None, fuzz_data_logger: FuzzLogger | None = None, session: Session | None = None
     ):
+        if fuzz_data_logger is not None:
+            fuzz_data_logger.log_info("this does run btw")
+        else:
+            pass
+            # print("wtf bro")
         self.current_log = ""
         index = "unknown"
         if session:
             index = session.total_mutant_index
-        print(f"pre_send test {index}")
+        # print(f"pre_send test {index}")
 
         if session:
-            self.state.on_pre_send(session)
+            self.state.on_pre_send(session, fuzz_data_logger)
 
         if not self.process:
             self.start_target()
@@ -118,8 +125,6 @@ class MinecraftServer(BaseMonitor):
                     result = s.connect_ex((self.address, self.port))
                     if result == 0:
                         s.close()
-                        print("waiting 3 seconds for the target to settle...")
-                        time.sleep(3)
                         print("target started")
                         return True
             except socket.error as e:
@@ -144,7 +149,7 @@ class MinecraftServer(BaseMonitor):
             self.start_command,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            bufsize=1,
+            bufsize=0,
         )
         t = Thread(
             target=self._enqueue_output, args=(self.process.stdout, self.full_log)
