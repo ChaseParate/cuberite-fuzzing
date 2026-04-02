@@ -1,4 +1,5 @@
-from typing import Callable, Iterable, Literal, cast
+from enum import Enum
+from typing import Callable, Iterable
 
 from boofuzz import (
     Fuzzable,
@@ -15,7 +16,12 @@ type ClientStatePacketCallback = Callable[
 ]
 
 type ClientStatePreSendCallback = Callable[[ClientState, Session, FuzzLogger], None]
-type ServerState = Literal["Login", "Play"]
+
+
+class ServerState(Enum):
+    LOGIN = 1
+    PLAY = 2
+
 
 class ClientState:
     """Client State + Callback Handler
@@ -31,17 +37,19 @@ class ClientState:
 
     compression_threshold: int | None = None
     disconnect_okay: bool = False
-    state: ServerState = "Login"
+    state: ServerState = ServerState.LOGIN
 
     def __init__(self):
         self._packet_callbacks = {
-            cast(ServerState, "Login"): dict[int, ClientStatePacketCallback](),
-            cast(ServerState, "Play"): dict[int, ClientStatePacketCallback](),
+            ServerState.LOGIN: {},
+            ServerState.PLAY: {},
         }
 
     login_player_position_and_look: PlayerPositionAndLook | None = None
 
-    def register_packet_callback(self, state: ServerState, id: int, callback: ClientStatePacketCallback):
+    def register_packet_callback(
+        self, state: ServerState, id: int, callback: ClientStatePacketCallback
+    ):
         self._packet_callbacks[state][id] = callback
 
     def unregister_packet_callback(self, state: ServerState, id: int):
@@ -67,7 +75,7 @@ class ClientState:
             self.compression_threshold = None
             self.disconnect_okay = False
             self.login_player_position_and_look = None
-            self.state = "Login"
+            self.state = ServerState.LOGIN
 
         return reset_state
 
@@ -87,7 +95,11 @@ class ClientState:
     ):
         data = target.recv()
         while len(data) > 0:
-            packet, data = RawPacket.read(data, self.compression_threshold, self._packet_callbacks[self.state].keys())
+            packet, data = RawPacket.read(
+                data,
+                self.compression_threshold,
+                self._packet_callbacks[self.state].keys(),
+            )
             if packet is None:
                 if len(data) != 0:
                     fuzz_data_logger.log_info("requesting more data")
@@ -97,7 +109,9 @@ class ClientState:
                 break
             callback = self._packet_callbacks[self.state].get(packet.id)
             if callback is not None:
-                fuzz_data_logger.log_info(f"received packet ID {hex(packet.id)} of length {len(packet.contents)}")
+                fuzz_data_logger.log_info(
+                    f"received packet ID {hex(packet.id)} of length {len(packet.contents)}"
+                )
                 callback(
                     packet.contents, self, target, fuzz_data_logger, session, node, edge
                 )

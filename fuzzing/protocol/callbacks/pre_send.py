@@ -38,7 +38,9 @@ def update_login_player_position_and_look(state: ClientState, session: Session, 
     if state.login_player_position_and_look is not None:
         teleport_confirm_node = _find_node(session, "Teleport Confirm")
         if teleport_confirm_node is not None:
-            logger.log_info(f"player position and look ID is {state.login_player_position_and_look.teleport_id}")
+            logger.log_info(
+                f"player position and look ID is {state.login_player_position_and_look.teleport_id}"
+            )
             teleport_confirm_node.names[
                 "Teleport Confirm.length.compressed.Teleport ID"
             ]._default_value = state.login_player_position_and_look.teleport_id

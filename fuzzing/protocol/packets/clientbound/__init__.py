@@ -52,7 +52,7 @@ class RawPacket:
         packet, rest = _split_next_packet(raw)
         if packet is None:
             return (None, raw)
-        
+
         packet_id = -1
 
         if threshold is not None:

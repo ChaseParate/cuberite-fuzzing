@@ -31,7 +31,7 @@ from fuzzing.protocol.packets.serverbound.player_position_and_look import (
 from fuzzing.protocol.packets.serverbound.teleport_confirm import (
     create_teleport_confirm_packet,
 )
-from fuzzing.protocol.state import ClientState
+from fuzzing.protocol.state import ClientState, ServerState
 
 
 def _connect_packets(
@@ -71,16 +71,18 @@ def connect_login_sequence(session: Session, state: ClientState) -> Request:
 
 
 def connect_protocol(session: Session, state: ClientState) -> None:
-    state.register_packet_callback("Play", 0x1F, handle_keepalive)
-    state.register_packet_callback("Login", 0x02, handle_login_success)
-    state.register_packet_callback("Login", 0x03, handle_set_compression)
-    state.register_packet_callback("Login", 0x00, handle_disconnect_login)
-    state.register_packet_callback("Play", 0x1A, handle_disconnect_play)
-    state.register_packet_callback("Play", 0x23, handle_join_game)
-    state.register_packet_callback("Play", 0x46, handle_spawn_position)
-    state.register_packet_callback("Play", 0x0D, handle_server_difficulty)
-    state.register_packet_callback("Play", 0x2E, handle_player_list_item)
-    state.register_packet_callback("Play", 0x2F, handle_player_position_and_look)
+    state.register_packet_callback(ServerState.PLAY, 0x1F, handle_keepalive)
+    state.register_packet_callback(ServerState.LOGIN, 0x02, handle_login_success)
+    state.register_packet_callback(ServerState.LOGIN, 0x03, handle_set_compression)
+    state.register_packet_callback(ServerState.LOGIN, 0x00, handle_disconnect_login)
+    state.register_packet_callback(ServerState.PLAY, 0x1A, handle_disconnect_play)
+    state.register_packet_callback(ServerState.PLAY, 0x23, handle_join_game)
+    state.register_packet_callback(ServerState.PLAY, 0x46, handle_spawn_position)
+    state.register_packet_callback(ServerState.PLAY, 0x0D, handle_server_difficulty)
+    state.register_packet_callback(ServerState.PLAY, 0x2E, handle_player_list_item)
+    state.register_packet_callback(
+        ServerState.PLAY, 0x2F, handle_player_position_and_look
+    )
 
     state.register_pre_send_callbacks(
         (update_default_username, update_login_player_position_and_look)

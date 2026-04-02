@@ -6,9 +6,9 @@ from queue import Empty, Queue
 from threading import Thread
 from typing import IO, override
 
+from boofuzz import FuzzLogger
 from boofuzz.monitors import BaseMonitor
 from boofuzz.sessions import Session
-from boofuzz import FuzzLogger
 
 from fuzzing.protocol.state import ClientState
 
@@ -50,14 +50,11 @@ class MinecraftServer(BaseMonitor):
         return f"process returned exit code {self.return_code}:\n{self.current_log}"
 
     def _post_send(self) -> bool:
-        lines = 0
         try:
             while True:
                 self.current_log += self.full_log.get_nowait()
-                lines += 1
         except Empty:
             pass
-            # print(f"read {lines} output lines")
         if self.process is None:
             return False
         code = self.process.poll()
@@ -71,12 +68,7 @@ class MinecraftServer(BaseMonitor):
     def post_send(
         self, target=None, fuzz_data_logger=None, session: Session | None = None
     ) -> bool:
-        index = "unknown"
-        if session:
-            index = session.total_mutant_index
-        # print(f"post_send test {index}")
         res = self._post_send()
-        # print("finished post_send")
         return res
 
     @override
@@ -85,18 +77,14 @@ class MinecraftServer(BaseMonitor):
 
     @override
     def pre_send(
-        self, target=None, fuzz_data_logger: FuzzLogger | None = None, session: Session | None = None
+        self,
+        target=None,
+        fuzz_data_logger: FuzzLogger | None = None,
+        session: Session | None = None,
     ):
         if fuzz_data_logger is not None:
             fuzz_data_logger.log_info("this does run btw")
-        else:
-            pass
-            # print("wtf bro")
         self.current_log = ""
-        index = "unknown"
-        if session:
-            index = session.total_mutant_index
-        # print(f"pre_send test {index}")
 
         if session:
             self.state.on_pre_send(session, fuzz_data_logger)

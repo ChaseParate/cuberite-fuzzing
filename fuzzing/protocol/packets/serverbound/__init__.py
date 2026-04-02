@@ -16,7 +16,8 @@ def create_packet(
 
     packet = VarIntSized(
         "length",
-        children=children if state is None
+        children=children
+        if state is None
         else [Block("compressed", children=children, encoder=compressed(state))],
     )
 
