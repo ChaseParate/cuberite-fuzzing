@@ -12,7 +12,7 @@ def create_client_settings_packet(
 
     return create_packet(
         "Client Settings",
-        0x2,
+        0x4,
         Block(
             "client_settings_data",
             children=(
@@ -28,7 +28,7 @@ def create_client_settings_packet(
                 ),
                 Byte(
                     "view_distance",
-                    default_value=8,
+                    default_value=1,
                     signed=True,
                     fuzzable=fields_fuzzable,
                 ),
@@ -49,5 +49,5 @@ def create_client_settings_packet(
                 ),
             ),
         ),
-        state.compression_threshold,
+        state,
     )

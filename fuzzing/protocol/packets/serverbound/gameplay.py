@@ -16,7 +16,7 @@ def chat_packet(state: ClientState, max_len: int | None = None) -> Request:
             "Length",
             children=[String("Chat Message", "Hello, World!", max_len=max_len)],
         ),
-        state.compression_threshold,
+        state,
     )
 
 
@@ -47,7 +47,7 @@ def tab_complete_packet(
                 *position_segment,
             ],
         ),
-        state.compression_threshold,
+        state,
     )
 
 
@@ -72,5 +72,5 @@ def plugin_message_packet(
                 else Bytes("Data", max_len=max_length),
             ],
         ),
-        state.compression_threshold,
+        state,
     )

@@ -13,7 +13,7 @@ from fuzzing.protocol.packets.clientbound import (
     SpawnPosition,
 )
 from fuzzing.protocol.packets.serverbound import create_raw_packet
-from fuzzing.protocol.state import ClientState
+from fuzzing.protocol.state import ClientState, ServerState
 
 
 def handle_keepalive(
@@ -45,6 +45,7 @@ def handle_login_success(
 ):
     # TODO: might want to parse the contents here, doesn't really matter
     login_success = LoginSuccess.from_raw_contents(raw)
+    state.state = ServerState.PLAY
     logger.log_info("Logged in successfully")
 
 

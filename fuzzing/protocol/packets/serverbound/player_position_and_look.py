@@ -30,5 +30,5 @@ def create_player_position_and_look_packet(
                 Byte("on_ground", signed=False, fuzzable=fields_fuzzable),
             ),
         ),
-        state.compression_threshold,
+        state,
     )

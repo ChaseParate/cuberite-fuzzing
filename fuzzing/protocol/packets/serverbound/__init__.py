@@ -4,10 +4,11 @@ from boofuzz import Block, Fuzzable, Request
 
 from fuzzing.models.varint_blocks import VarInt, VarIntBlock, VarIntSized
 from fuzzing.protocol.encoders import compressed
+from fuzzing.protocol.state import ClientState
 
 
 def create_packet(
-    name: str, packet_id: int, inner: Fuzzable | None, threshold: int | None = None
+    name: str, packet_id: int, inner: Fuzzable | None, state: ClientState | None = None
 ) -> Request:
     children: list[Fuzzable] = [VarIntBlock("packet_id", packet_id)]
     if inner is not None:
@@ -16,8 +17,8 @@ def create_packet(
     packet = VarIntSized(
         "length",
         children=children
-        if threshold is None
-        else [Block("compressed", children=children, encoder=compressed(threshold))],
+        if state is None
+        else [Block("compressed", children=children, encoder=compressed(state))],
     )
 
     return Request(name, children=packet)

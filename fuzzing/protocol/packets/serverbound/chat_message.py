@@ -22,5 +22,5 @@ def create_chat_message_packet(
                 ),
             ),
         ),
-        state.compression_threshold,
+        state,
     )
