@@ -6,20 +6,6 @@ from fuzzing.protocol.packets.serverbound import create_packet
 from fuzzing.protocol.state import ClientState
 
 
-def chat_packet(state: ClientState, max_len: int | None = None) -> Request:
-    # https://c4k3.github.io/wiki.vg/Protocol.html#Chat_Message_.28serverbound.29
-
-    return create_packet(
-        "Chat",
-        0x2,
-        VarIntSized(
-            "Length",
-            children=[String("Chat Message", "Hello, World!", max_len=max_len)],
-        ),
-        state,
-    )
-
-
 def tab_complete_packet(
     state: ClientState,
     is_command: bool = False,
