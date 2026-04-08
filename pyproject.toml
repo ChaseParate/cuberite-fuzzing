@@ -6,16 +6,16 @@ requires-python = ">=3.13"
 dependencies = [
     "bitstring>=4.4.0",
     "boofuzz>=0.4.2",
-    "click>=8.3.1",
+    "click>=8.3.2",
 ]
 
 [dependency-groups]
 dev = [
     "pre-commit>=4.5.1",
-    "pytest>=9.0.2",
+    "pytest>=9.0.3",
     "lorem-text>=3.0",
-    "ruff>=0.15.8",
-    "ty>=0.0.26",
+    "ruff>=0.15.9",
+    "ty>=0.0.29",
 ]
 
 [tool.ruff.lint]
