@@ -1,6 +1,8 @@
 # Fuzzing [Cuberite](https://cuberite.org/)
 ## by [Chase Harkcom](https://github.com/ChaseParate) and [Max Petersen](https://github.com/GuyWithaPC)
 
+See [implemented_serverbound_packets.md](implemented_serverbound_packets.md) to see which packets we have implemented.
+
 ## Development
 Make sure to also pull the `cuberite` submodule (either pass `--recurse-submodules` to your `git clone` command or run `git submodule update --init`).
 Run `make build-cuberite` at the root directory to build Cuberite.
