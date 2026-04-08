@@ -1,7 +1,7 @@
 import boofuzz
 
-from fuzzing.models.prefixed_blocks import IDOrX, PrefixedOptional
-from fuzzing.models.varint_blocks import VarIntBlock
+from fuzzing.blocks.prefixed_blocks import IDOrX, PrefixedOptional
+from fuzzing.blocks.varint_blocks import VarIntBlock
 
 
 def test_optional_empty():

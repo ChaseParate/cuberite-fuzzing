@@ -1,7 +1,8 @@
 from boofuzz import Block, Byte, Bytes, Request, String
 
-from fuzzing.models.varint_blocks import VarIntSized
-from fuzzing.models.vectors import Position, PositionBlock
+from fuzzing.blocks.varint_blocks import VarIntSized
+from fuzzing.blocks.vector_blocks import PositionBlock
+from fuzzing.models.vectors import Position
 from fuzzing.protocol.packets.serverbound import create_packet
 from fuzzing.protocol.state import ClientState
 
