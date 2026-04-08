@@ -35,6 +35,7 @@ from fuzzing.protocol.packets.serverbound.player_position_and_look import (
 from fuzzing.protocol.packets.serverbound.teleport_confirm import (
     create_teleport_confirm_packet,
 )
+from fuzzing.protocol.packets.serverbound.use_item import create_use_item_packet
 from fuzzing.protocol.state import ClientState, ServerState
 
 
@@ -99,6 +100,7 @@ def connect_protocol(session: Session, state: ClientState) -> None:
         [create_chat_message_packet(state)],
         [create_tab_complete_packet(state)],
         [create_plugin_message_packet(state)],
+        [create_use_item_packet(state)],
     ]
 
     for packet_sequence in packet_sequences:

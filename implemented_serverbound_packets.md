@@ -37,4 +37,4 @@
 - [ ] **[Animation](https://c4k3.github.io/wiki.vg/Protocol.html#Animation_.28serverbound.29)**
 - [ ] **[Spectate](https://c4k3.github.io/wiki.vg/Protocol.html#Spectate)**
 - [ ] **[Player Block Placement](https://c4k3.github.io/wiki.vg/Protocol.html#Player_Block_Placement)**
-- [ ] **[Use Item](https://c4k3.github.io/wiki.vg/Protocol.html#Use_Item)**
+- [X] **[Use Item](https://c4k3.github.io/wiki.vg/Protocol.html#Use_Item)** ([Implementation](fuzzing/protocol/packets/serverbound/use_item.py))
