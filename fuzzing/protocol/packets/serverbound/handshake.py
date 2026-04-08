@@ -1,6 +1,6 @@
 from boofuzz import Block, Fuzzable, Request, String, Word
 
-from fuzzing.models.varint_blocks import VarIntBlock, VarIntSized
+from fuzzing.blocks.varint_blocks import VarIntBlock, VarIntSized
 from fuzzing.protocol import PROTOCOL_VERSION_NUMBER
 from fuzzing.protocol.packets.serverbound import create_packet
 
@@ -14,22 +14,19 @@ def create_handshake_packet(
         f"Handshake ({subname})",
         0x0,
         Block(
-            "handshake_data",
             children=(
-                # TODO: Should we experiment with fuzzing this?
-                VarIntBlock("protocol_version", PROTOCOL_VERSION_NUMBER),
+                VarIntBlock("Protocol Version", PROTOCOL_VERSION_NUMBER),
                 VarIntSized(
-                    "server_address",
+                    "Server Address",
                     children=(
                         String(
-                            "server_address_raw",
                             max_len=255,
                             fuzzable=server_address_and_port_fuzzable,
                         ),
                     ),
                 ),
                 Word(
-                    "server_port",
+                    "Server Port",
                     signed=False,
                     fuzzable=server_address_and_port_fuzzable,
                 ),

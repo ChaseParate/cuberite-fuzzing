@@ -4,15 +4,14 @@ from fuzzing.blocks.varint_blocks import VarIntBlock
 from fuzzing.protocol.packets.serverbound import create_packet
 from fuzzing.protocol.state import ClientState
 
+# https://c4k3.github.io/wiki.vg/Protocol.html#Use_Item
 
-def create_client_status_packet(
+
+def create_use_item_packet(
     state: ClientState, *, fields_fuzzable: bool = True
 ) -> Request:
-    # https://c4k3.github.io/wiki.vg/Protocol.html#Client_Status
-
     return create_packet(
-        "Client Status",
-        0x3,
-        VarIntBlock("Action ID", fuzzable=fields_fuzzable),
-        state,
+        "Use Item",
+        0x20,
+        VarIntBlock("Hand", 0, fuzzable=fields_fuzzable),
     )

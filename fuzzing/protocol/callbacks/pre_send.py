@@ -30,7 +30,7 @@ def update_default_username(state: ClientState, session: Session, _logger):
     login_start_node = _find_node(session, "Login Start")
     if login_start_node is not None:
         login_start_node.names[
-            "Login Start.length.login_start_data.name.name_raw"
+            "Login Start.length.name.name_raw"
         ]._default_value = _generate_username()
 
 

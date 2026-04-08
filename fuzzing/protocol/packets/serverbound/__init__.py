@@ -2,7 +2,8 @@ import zlib
 
 from boofuzz import Block, Fuzzable, Request
 
-from fuzzing.models.varint_blocks import VarInt, VarIntBlock, VarIntSized
+from fuzzing.blocks.varint_blocks import VarIntBlock, VarIntSized
+from fuzzing.models.varint import VarInt
 from fuzzing.protocol.encoders import compressed
 from fuzzing.protocol.state import ClientState
 

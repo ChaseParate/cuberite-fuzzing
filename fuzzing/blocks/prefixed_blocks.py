@@ -2,7 +2,7 @@ from typing import override
 
 import boofuzz
 
-from fuzzing.models.varint_blocks import VarIntBlock
+from fuzzing.blocks.varint_blocks import VarIntBlock
 
 
 class PrefixedOptional(boofuzz.Fuzzable):

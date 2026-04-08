@@ -2,13 +2,13 @@ import boofuzz
 import pytest
 from lorem_text import lorem
 
-from fuzzing.models.varint import VarInt, VarLong
-from fuzzing.models.varint_blocks import (
+from fuzzing.blocks.varint_blocks import (
     VarIntBlock,
     VarIntSized,
     VarLongBlock,
     VarLongSized,
 )
+from fuzzing.models.varint import VarInt, VarLong
 
 
 def test_varint_mutations():

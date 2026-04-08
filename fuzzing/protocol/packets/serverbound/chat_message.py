@@ -1,6 +1,6 @@
 from boofuzz import Request, String
 
-from fuzzing.models.varint_blocks import VarIntSized
+from fuzzing.blocks.varint_blocks import VarIntSized
 from fuzzing.protocol.packets.serverbound import create_packet
 from fuzzing.protocol.state import ClientState
 
