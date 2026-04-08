@@ -23,6 +23,10 @@ from fuzzing.protocol.packets.serverbound.client_settings import (
 from fuzzing.protocol.packets.serverbound.client_status import (
     create_client_status_packet,
 )
+from fuzzing.protocol.packets.serverbound.gameplay import (
+    create_plugin_message_packet,
+    create_tab_complete_packet,
+)
 from fuzzing.protocol.packets.serverbound.handshake import HANDSHAKE_LOGIN
 from fuzzing.protocol.packets.serverbound.login_start import LOGIN_START
 from fuzzing.protocol.packets.serverbound.player_position_and_look import (
@@ -93,6 +97,8 @@ def connect_protocol(session: Session, state: ClientState) -> None:
     packet_sequences: list[list[Request]] = [
         [create_player_position_and_look_packet(state)],
         [create_chat_message_packet(state)],
+        [create_tab_complete_packet(state)],
+        [create_plugin_message_packet(state)],
     ]
 
     for packet_sequence in packet_sequences:
