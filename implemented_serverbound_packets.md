@@ -25,7 +25,7 @@
 - [ ] **[Steer Boat](https://c4k3.github.io/wiki.vg/Protocol.html#Steer_Boat)**
 - [ ] **[Craft Recipe Request](https://c4k3.github.io/wiki.vg/Protocol.html#Craft_Recipe_Request)**
 - [ ] **[Player Abilities](https://c4k3.github.io/wiki.vg/Protocol.html#Player_Abilities_.28serverbound.29)**
-- [ ] **[Player Digging](https://c4k3.github.io/wiki.vg/Protocol.html#Player_Digging)**
+- [X] **[Player Digging](https://c4k3.github.io/wiki.vg/Protocol.html#Player_Digging)** ([Implementation](fuzzing/protocol/packets/serverbound/player_digging.py))
 - [ ] **[Entity Action](https://c4k3.github.io/wiki.vg/Protocol.html#Entity_Action)**
 - [ ] **[Steer Vehicle](https://c4k3.github.io/wiki.vg/Protocol.html#Steer_Vehicle)**
 - [ ] **[Crafting Book Data](https://c4k3.github.io/wiki.vg/Protocol.html#Crafting_Book_Data)**
