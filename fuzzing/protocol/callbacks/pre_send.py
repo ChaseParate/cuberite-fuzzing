@@ -18,11 +18,12 @@ def _reinterpret_double_float_to_int(f: float) -> int:
     return struct.unpack("<Q", struct.pack("<d", f))[0]
 
 
-def _generate_username(*, prefix: str = "Boo_", length: int = 8) -> str:
+def _generate_username(*, prefix: str = "Boo_", suffix_length: int = 6) -> str:
+    name_size = len(prefix) + suffix_length
+    assert name_size >= 3 and name_size <= 16
+
     return prefix + "".join(
-        random.choices(
-            string.ascii_letters + string.digits, k=max(length - len(prefix), 0)
-        )
+        random.choices(string.ascii_letters + string.digits, k=max(suffix_length, 0))
     )
 
 
