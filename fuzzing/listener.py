@@ -82,8 +82,6 @@ class MinecraftServer(BaseMonitor):
         fuzz_data_logger: FuzzLogger | None = None,
         session: Session | None = None,
     ):
-        if fuzz_data_logger is not None:
-            fuzz_data_logger.log_info("this does run btw")
         self.current_log = ""
 
         if session:

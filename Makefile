@@ -6,6 +6,7 @@ CUBERITE_BINARY := $(CUBERITE_BUILD_DIRECTORY)/Server/Cuberite
 
 RUN_CUBERITE_DIRECTORY := /tmp/run-cuberite
 RUN_CUBERITE_PORT := 25565
+SERVER_CMD ?= make run-cuberite
 
 CUBERITE_CONFIG_SETTINGS := cuberite-config/*
 
@@ -15,7 +16,8 @@ fuzz:
 	rm -rf $(RUN_CUBERITE_DIRECTORY)
 	uv run -m $(FUZZING_DIRECTORY) fuzz\
 		--port $(RUN_CUBERITE_PORT)\
-		--address localhost
+		--address localhost\
+		--server-command "$(SERVER_CMD)"
 
 test:
 	uv run pytest $(FUZZING_DIRECTORY)
