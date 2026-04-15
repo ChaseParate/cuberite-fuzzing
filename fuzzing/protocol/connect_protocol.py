@@ -78,6 +78,18 @@ def connect_login_sequence(session: Session, state: ClientState) -> Request:
     return login_sequence[-1]
 
 
+def connect_packets_complete(
+    session: Session, state: ClientState, packets: list[Request]
+) -> None:
+    """
+    Creates a [complete graph](https://en.wikipedia.org/wiki/Complete_graph) of the provided packets.
+    """
+
+    for packet_1 in packets:
+        for packet_2 in packets:
+            session.connect(packet_1, packet_2, state)
+
+
 def connect_protocol(session: Session, state: ClientState) -> None:
     state.register_packet_callback(ServerState.PLAY, 0x1F, handle_keepalive)
     state.register_packet_callback(ServerState.LOGIN, 0x02, handle_login_success)
@@ -98,14 +110,16 @@ def connect_protocol(session: Session, state: ClientState) -> None:
 
     final_login_packet = connect_login_sequence(session, state)
 
-    packet_sequences: list[list[Request]] = [
-        [create_player_position_and_look_packet(state)],
-        [create_chat_message_packet(state)],
-        [create_tab_complete_packet(state)],
-        [create_plugin_message_packet(state)],
-        [create_use_item_packet(state)],
-        [create_player_digging_packet(state)],
+    gameplay_packets = [
+        create_player_position_and_look_packet(state),
+        create_chat_message_packet(state),
+        create_tab_complete_packet(state),
+        create_plugin_message_packet(state),
+        create_use_item_packet(state),
+        create_player_digging_packet(state),
     ]
 
-    for packet_sequence in packet_sequences:
-        _connect_packets(session, state, [final_login_packet] + packet_sequence)
+    for packet in gameplay_packets:
+        session.connect(final_login_packet, packet)
+
+    connect_packets_complete(session, state, gameplay_packets)
