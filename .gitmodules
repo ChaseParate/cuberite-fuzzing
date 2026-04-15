@@ -1,4 +1,4 @@
 [submodule "cuberite"]
 	path = cuberite
 	url = git@github.com:cuberite/cuberite.git
-	branch = master
+	branch = experimental
