@@ -33,10 +33,10 @@ type-check:
 
 $(CUBERITE_BUILD_DIRECTORY)/Makefile:
 	mkdir -p $(CUBERITE_BUILD_DIRECTORY)
-	cd $(CUBERITE_BUILD_DIRECTORY) && cmake -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_C_FLAGS='-fsanitize=address -g' -DCMAKE_CXX_FLAGS='-fsanitize=address -g' ..
+	cd $(CUBERITE_BUILD_DIRECTORY) && cmake -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_C_FLAGS='-fsanitize=address,undefined -g' -DCMAKE_CXX_FLAGS='-fsanitize=address,undefined -g' .. 
 
 $(CUBERITE_BINARY): $(CUBERITE_BUILD_DIRECTORY)/Makefile
-	make -C $(CUBERITE_BUILD_DIRECTORY) -j
+	UBSAN_OPTIONS=silence_unsigned_overflow=1 make -C $(CUBERITE_BUILD_DIRECTORY) -j
 
 build-cuberite: $(CUBERITE_BINARY)
 
