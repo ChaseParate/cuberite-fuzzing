@@ -53,8 +53,12 @@ In order to use `boofuzz`, we needed to define the models for each packet/reques
 The Minecraft protocol involves many interesting/proprietary encodings and data models that `boofuzz` understandably did not provide out of the box; some examples include variable length integers and a compressed 3D vector.
 Max was the primary developer for writing not only the raw encoding/decoding logic for these, but also the custom "block" types for use in `boofuzz`.
 
-Cuberite supports up to version 1.12.2 of the game (released September 2017) #footnote[Frankly, "support" is a bit of a stretch.
-Many features are incomplete or inaccurate to the official Minecraft server, but this version seemed to be the most stable from our preliminary testing.], so we had to #link("https://c4k3.github.io/wiki.vg/Protocol.html")[find an archive of some community-driven documentation for the protocol for that older version of the game], which still had some inaccuracies, so we also used #link("https://github.com/prismarinejs/minecraft-data")[this other large data collection] to verify our packets were accurate.
+Cuberite supports up to version 1.12.2 of the game (released September 2017)
+#footnote[
+  Frankly, "support" is a bit of a stretch.
+  Many features are incomplete or inaccurate to the official Minecraft server, but this version seemed to be the most stable from our preliminary testing.
+]
+, so we had to #link("https://c4k3.github.io/wiki.vg/Protocol.html")[find an archive of some community-driven documentation for the protocol for that older version of the game], which still had some inaccuracies, so we also used #link("https://github.com/prismarinejs/minecraft-data")[this other large data collection] to verify our packets were accurate.
 The Minecraft protocol is a stateful protocol, meaning we had to retain some information from earlier received packets (thus, we actually needed to unmarshall these clientbound packets) and use that data to hotswap values in later-sent packets.
 For example, during the login sequence of the protocol, the server sends the client a packet saying "you should spawn your player at this position", and the client must respond with a packet saying "I have spawned at that exact location", otherwise they will be kicked from the server.
 We had to do a lot of finagling to get this to work, as `boofuzz` does not currently support this, to our knowledge.
