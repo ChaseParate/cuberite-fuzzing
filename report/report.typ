@@ -49,4 +49,8 @@ Issue \#5640 was actually the "packet of doom" we were looking for, because it r
 
 == Conclusion
 // Reflection, how we could improve/extend the project, etc.
-MAX TODO
+Using this black-box fuzzing strategy, we were able to find a couple interesting bugs, which shows that testing the network stack of a game server like this is a viable strategy. It might even have some reproducibility benefits over a traditional AFL harness, because it doesn't require any changes to the code and works across different languages/architectures.
+
+In the future, it could be interesting to try and extend this type of fuzzer to work across all server implementations, but as of right now it would probably require some changes to Boofuzz's internals to make our clientbound packet handling more robust in the event of the server forcefully closing the connection (which the Java server is a lot more aggressive about).
+
+Since our grammar-guided fuzzing technique uses a sort of state machine anyways to track which packets to send / the validity of certain packets, it could also be interesting to extend this state machine to have even more validation on the client state returned by the server. This might slow down our fuzzing even more from the usual 10-30 executions/sec, but it could be used to catch bugs that don't crash the server but do enable cheating.
